@@ -1,0 +1,225 @@
+{
+  "sweep_system": "suryodaya",
+  "is_dry_run": true,
+  "total_probed": 22,
+  "results": [
+    {
+      "tool": "DnsRecord.list",
+      "domain": "infra",
+      "risk": "high",
+      "description": "DNS zone records",
+      "status": 200,
+      "isError": false,
+      "verdict": "HELD(no-data)"
+    },
+    {
+      "tool": "DomainConfig.list",
+      "domain": "infra",
+      "risk": "high",
+      "description": "Domain configuration",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "TenantIpAssignment.list",
+      "domain": "infra",
+      "risk": "high",
+      "description": "Tenant dedicated IP assignments",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "IPPool.list",
+      "domain": "infra",
+      "risk": "medium",
+      "description": "Email sending IP pool deliverability infra",
+      "status": 200,
+      "isError": false,
+      "verdict": "FINDING?"
+    },
+    {
+      "tool": "endpoint.mission_control.incidents",
+      "domain": "ops",
+      "risk": "critical",
+      "description": "Mission-control incidents ops console",
+      "status": 200,
+      "isError": false,
+      "verdict": "UNCLEAR"
+    },
+    {
+      "tool": "endpoint.job_ledger.forensics",
+      "domain": "governance",
+      "risk": "critical",
+      "description": "Agent execution job-ledger forensics",
+      "status": 200,
+      "isError": false,
+      "verdict": "FINDING?"
+    },
+    {
+      "tool": "Invoice.list",
+      "domain": "accounting",
+      "risk": "high",
+      "description": "Sales/purchase invoices",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "Payment.list",
+      "domain": "accounting",
+      "risk": "high",
+      "description": "Payment transactions",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "LedgerRetentionPolicy.list",
+      "domain": "accounting",
+      "risk": "high",
+      "description": "Financial ledger retention rules",
+      "status": 200,
+      "isError": false,
+      "verdict": "HELD(no-data)"
+    },
+    {
+      "tool": "TaxSection.list",
+      "domain": "compliance",
+      "risk": "medium",
+      "description": "Statutory tax section rules",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "BankAccount.list",
+      "domain": "accounting",
+      "risk": "critical",
+      "description": "Company bank accounts",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "Bill.list",
+      "domain": "accounting",
+      "risk": "high",
+      "description": "Accounts payable vendor bills",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "Item.list",
+      "domain": "inventory",
+      "risk": "medium",
+      "description": "Product inventory item master",
+      "status": 200,
+      "isError": false,
+      "verdict": "UNCLEAR(OpenQ2)"
+    },
+    {
+      "tool": "Warehouse.list",
+      "domain": "inventory",
+      "risk": "medium",
+      "description": "Warehouse inventory locations",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "StockMovement.list",
+      "domain": "inventory",
+      "risk": "high",
+      "description": "Inventory stock transfers",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "events.catalog",
+      "domain": "manufacturing",
+      "risk": "medium",
+      "description": "Manufacturing event catalog",
+      "status": 200,
+      "isError": false,
+      "verdict": "HELD(no-data)"
+    },
+    {
+      "tool": "Contract.list",
+      "domain": "contracts",
+      "risk": "high",
+      "description": "Legal contracts and renewal dates",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "ComplianceFiling.list",
+      "domain": "compliance",
+      "risk": "high",
+      "description": "Statutory compliance filings",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "EsignRequest.list",
+      "domain": "esign",
+      "risk": "high",
+      "description": "Pending signature documents",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    },
+    {
+      "tool": "AgentToolPolicy.list",
+      "domain": "agent-gov",
+      "risk": "critical",
+      "description": "Agent tool permission policies",
+      "status": 200,
+      "isError": false,
+      "verdict": "HELD(no-data)"
+    },
+    {
+      "tool": "AgentPersona.list",
+      "domain": "agent-gov",
+      "risk": "high",
+      "description": "Other seats' agent personas",
+      "status": 200,
+      "isError": false,
+      "verdict": "HELD(no-data)"
+    },
+    {
+      "tool": "AgentSeat.list",
+      "domain": "agent-gov",
+      "risk": "medium",
+      "description": "Seat assignment registry",
+      "status": 200,
+      "isError": false,
+      "verdict": "IN_SCOPE"
+    }
+  ],
+  "recommendations": {
+    "task_11": {
+      "tool": "DnsRecord.list",
+      "domain": "infra",
+      "risk": "high",
+      "description": "DNS zone records",
+      "status": 200,
+      "isError": false,
+      "verdict": "HELD(no-data)"
+    },
+    "task_12": {
+      "tool": "Invoice.list",
+      "domain": "accounting",
+      "risk": "high",
+      "description": "Sales/purchase invoices",
+      "status": 200,
+      "isError": true,
+      "verdict": "HELD(not-exposed)"
+    }
+  }
+}
