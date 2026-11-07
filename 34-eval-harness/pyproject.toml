@@ -1,0 +1,37 @@
+[project]
+name = "seat34-eval-harness"
+version = "0.1.0"
+description = "Seat 34 Eval Harness: golden-task suites that judge AgentSwitch seat agents by platform state."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "httpx2>=2.13",
+    "mcp>=2.3,<3",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["scripts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

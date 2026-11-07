@@ -1,0 +1,37 @@
+# Seat 34 — files that must never reach the public repo.
+
+# Raw notes and pasted chats (may hold passwords or platform detail). Local only.
+docs/raw/
+
+# Live platform dumps (schemas, tool lists). The course rules forbid committing them.
+# Regenerate with: uv run python scripts/platform_sync.py
+data/platform/
+
+# Platform notes stay local (the repo is public). Only the stub README is committed.
+docs/processed/platform/*
+!docs/processed/platform/README.md
+
+# Full bug reports hold steps and replies (platform data). Only the index and template are committed.
+docs/bugs/reports/
+
+# Run output and local reports (may hold customer data).
+runs/
+results.json
+reports/
+local/
+*.log
+
+# Secrets and personal settings.
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Python and tool caches.
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
