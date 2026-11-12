@@ -1,0 +1,4 @@
+reports/
+
+# Private platform notes (hostnames, tool and field names, counts); never commit
+private/
