@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Duplicates Are Found</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single reading column of numbered steps (the real order the matcher works in), with a score
+   calculator after the bands, laid out like index cards on a clean ledger page. */
+:root {
+  --paper: #f6f8fb;
+  --card: #ffffff;
+  --ink: #1b2440;
+  --muted: #5a6482;
+  --rule: #d9deea;
+  --accent: #2f4fd8;
+  --mark: #f4b62a;
+  --mark-soft: #fff1cc;
+  --propose: #1f7a4d;
+  --propose-soft: #e2f4ea;
+  --review: #9a6200;
+  --review-soft: #fdf0d6;
+  --below: #545b6a;
+  --below-soft: #eceef2;
+  --out: #b23a3a;
+  --out-soft: #fbe6e6;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Literata", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10152a; --card: #182040; --ink: #e7ebf7; --muted: #a2abc8; --rule: #2c3660;
+    --accent: #8ea4ff; --mark: #f4c04a; --mark-soft: #3a3115;
+    --propose: #6fd3a0; --propose-soft: #15352a; --review: #f2c063; --review-soft: #3a2e12;
+    --below: #a7adbb; --below-soft: #262c40; --out: #f08c8c; --out-soft: #3c1d24;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10152a; --card: #182040; --ink: #e7ebf7; --muted: #a2abc8; --rule: #2c3660;
+  --accent: #8ea4ff; --mark: #f4c04a; --mark-soft: #3a3115;
+  --propose: #6fd3a0; --propose-soft: #15352a; --review: #f2c063; --review-soft: #3a2e12;
+  --below: #a7adbb; --below-soft: #262c40; --out: #f08c8c; --out-soft: #3c1d24;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0;
+  background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+}
+main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 2.9rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; font-weight: 700; }
+h3 { font-size: 1.05rem; font-weight: 700; }
+p { margin: 0; }
+.stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.lede { font-size: 1.12rem; color: var(--muted); max-width: 62ch; }
+.eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.mono, code { font-family: var(--mono); font-size: 0.86em; }
+mark { background: var(--mark-soft); color: inherit; padding: 0 3px; border-radius: 3px; }
+
+/* the one-line promise */
+.promise { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.promise div { border-top: 3px solid var(--ink); padding-top: 10px; }
+.promise b { font-family: var(--display); display: block; font-size: 1.02rem; }
+.promise span { color: var(--muted); font-size: 0.95rem; }
+
+/* steps */
+.step { display: grid; grid-template-columns: 52px 1fr; gap: 16px; }
+.num { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--accent); line-height: 1; padding-top: 2px; }
+@media (max-width: 520px) { .step { grid-template-columns: 1fr; gap: 6px; } }
+
+/* before -> after examples */
+.cards { display: grid; gap: 8px; }
+.ba { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; }
+.ba .from { font-family: var(--mono); font-size: 0.86rem; overflow-wrap: anywhere; }
+.ba .to { font-family: var(--mono); font-size: 0.86rem; color: var(--accent); overflow-wrap: anywhere; }
+.ba .arrow { color: var(--muted); }
+.ba small { grid-column: 1 / -1; color: var(--muted); font-family: var(--body); font-size: 0.88rem; }
+
+/* weights */
+.weights { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.wt { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.wrow { display: grid; grid-template-columns: minmax(0, 1fr) 120px 40px; gap: 10px; align-items: center; font-size: 0.93rem; }
+.bar { height: 10px; background: var(--below-soft); border-radius: 5px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.wv { font-family: var(--mono); font-size: 0.85rem; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* score ruler */
+.ruler { position: relative; margin-top: 8px; }
+.track { display: grid; grid-template-columns: minmax(0, 60fr) minmax(0, 30fr) minmax(0, 10fr); height: 46px; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule); }
+.track div { display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 700; font-size: 0.92rem; text-align: center; padding: 0 4px; }
+.t-below { background: var(--below-soft); color: var(--below); }
+.t-review { background: var(--review-soft); color: var(--review); }
+.t-propose { background: var(--propose-soft); color: var(--propose); }
+.ticks { position: relative; height: 22px; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+.ticks span { position: absolute; top: 4px; transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+.ticks span:first-child { transform: none; }
+.ticks span:last-child { transform: translateX(-100%); }
+.needle { position: absolute; top: -8px; width: 3px; height: 62px; background: var(--ink); border-radius: 2px; transition: left 0.25s ease; }
+@media (prefers-reduced-motion: reduce) { .needle { transition: none; } }
+
+.pill { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 0.82rem; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+.p-propose { background: var(--propose-soft); color: var(--propose); }
+.p-review { background: var(--review-soft); color: var(--review); }
+.p-below { background: var(--below-soft); color: var(--below); }
+.p-out { background: var(--out-soft); color: var(--out); }
+
+ul.plain { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+ul.plain li::marker { color: var(--accent); }
+.note { font-size: 0.93rem; color: var(--muted); }
+
+/* calculator */
+.calc { background: var(--card); border: 2px solid var(--ink); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-family: var(--display); font-weight: 700; font-size: 0.9rem; padding: 7px 16px; background: transparent; color: var(--muted); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.calc fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.calc legend { font-family: var(--display); font-weight: 700; margin-bottom: 6px; padding: 0; }
+.opt { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; cursor: pointer; }
+.opt input { margin-top: 5px; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
+.opt .w { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-left: auto; padding-left: 8px; white-space: nowrap; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; }
+.result { border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.score { font-family: var(--display); font-size: 2.4rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.why { font-size: 0.95rem; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+
+/* ruled out + keep */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.box { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+ol.ladder { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: l; }
+ol.ladder li { counter-increment: l; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+ol.ladder li::before { content: counter(l); font-family: var(--display); font-weight: 700; background: var(--mark-soft); color: var(--ink); border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center; font-size: 0.85rem; }
+
+
+/* diagrams */
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+figcaption { font-size: 0.92rem; color: var(--muted); }
+.scroll { overflow-x: auto; }
+.diagram { display: block; width: 100%; height: auto; color: var(--ink); font-family: var(--display); }
+.diagram.wide { min-width: 560px; }
+.diagram .nbox { fill: var(--card); stroke: currentColor; stroke-width: 1.5; }
+.diagram .dash { stroke-dasharray: 5 4; }
+.diagram .soft { fill: var(--muted); }
+.diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.diagram .f-propose { fill: var(--propose-soft); stroke: var(--propose); }
+.diagram .f-review { fill: var(--review-soft); stroke: var(--review); }
+.diagram .f-out { fill: var(--out-soft); stroke: var(--out); }
+.diagram .f-below { fill: var(--below-soft); stroke: var(--below); }
+.diagram .f-mark { fill: var(--mark-soft); stroke: var(--mark); }
+.diagram .t-p { fill: var(--propose); } .diagram .t-r { fill: var(--review); }
+.diagram .t-o { fill: var(--out); } .diagram .t-b { fill: var(--below); }
+.diagram .dot { fill: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .diagram .dot { display: none; } }
+
+/* tidy stepper */
+.tidy { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font: inherit; font-family: var(--display); font-size: 0.82rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--rule); background: transparent; color: var(--muted); cursor: pointer; }
+.chips button[aria-current="step"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tline { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.tline span:first-child { font-family: var(--display); font-weight: 700; font-size: 0.85rem; color: var(--muted); }
+.tline output { font-family: var(--mono); font-size: 1rem; overflow-wrap: anywhere; transition: opacity 0.2s; }
+.tline output.flash { opacity: 0.25; }
+.tverdict { font-family: var(--display); font-weight: 700; min-height: 1.5em; }
+.tbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { font: inherit; font-family: var(--display); font-weight: 700; font-size: 0.88rem; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .tline output { transition: none; } }
+
+/* stacked score bars */
+.stack-ex { display: flex; flex-direction: column; gap: 22px; }
+.sx { display: flex; flex-direction: column; gap: 8px; }
+.sx-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.sx-names { font-weight: 600; }
+.sx-names span { color: var(--muted); font-weight: 400; }
+.sbar { position: relative; height: 34px; background: var(--below-soft); border-radius: 6px; overflow: hidden; }
+.sbar .cap { position: absolute; z-index: 1; pointer-events: none; top: 0; bottom: 0; left: 83.333%; right: 0;
+  background: repeating-linear-gradient(135deg, transparent 0 6px, var(--rule) 6px 8px); }
+.segs { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; display: flex; }
+.segs i { flex: none; display: flex; align-items: center; justify-content: center; height: 100%; font-style: normal;
+  font-family: var(--mono); font-size: 0.72rem; color: var(--paper); background: var(--accent);
+  border-right: 2px solid var(--card); white-space: nowrap; overflow: hidden; }
+.segs i:nth-child(even) { background: var(--ink); }
+.segs.grow i { animation: grow 0.6s ease-out both; }
+@keyframes grow { from { width: 0; } }
+@media (prefers-reduced-motion: reduce) { .segs.grow i { animation: none; } }
+.th { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); }
+.sscale { position: relative; height: 18px; font-family: var(--mono); font-size: 0.74rem; color: var(--muted); }
+.sscale span { position: absolute; transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+.sx-why { font-size: 0.92rem; color: var(--muted); }
+
+.final { border-left: 4px solid var(--mark); padding: 6px 0 6px 18px; }
+footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<main>
+  <header class="stack">
+    <span class="eyebrow">Seat 35 · Data Steward · rules version 3</span>
+    <h1>How the duplicate finder decides two records are the same</h1>
+    <p class="lede">A business system can end up with the same customer, supplier or product entered twice. This tool reads every record, looks for pairs that seem to be the same, and suggests merges. It never merges anything itself. A person reads each suggestion and decides.</p>
+    <div class="promise">
+      <div><b>Fixed rules, no guessing</b><span>The same records always give the same answer, so anyone can check it.</span></div>
+      <div><b>Clues add up to a score</b><span>Each matching detail adds points, from 0 up to 1.</span></div>
+      <div><b>A person has the last word</b><span>The tool only suggests. Nothing on the system changes.</span></div>
+    </div>
+  </header>
+
+  <figure>
+    <div class="scroll">
+      <svg class="diagram wide" viewBox="0 0 640 470" role="img" aria-label="Every record is tidied and paired with records it shares something with. Each pair is scored, then ends in one of four places: propose, review, ruled out or not listed. Only propose and review pairs reach a person.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+        </defs>
+        <rect class="nbox" x="170" y="10" width="300" height="46" rx="8"/>
+        <text x="320" y="39" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">Every customer, supplier, product</text>
+        <path class="line" d="M320 56V108" marker-end="url(#ah)"/>
+        <text x="332" y="80" font-size="13" class="soft">tidy, then pair only records</text>
+        <text x="332" y="96" font-size="13" class="soft">that share something (steps 1–2)</text>
+        <rect class="nbox" x="220" y="110" width="200" height="42" rx="8"/>
+        <text x="320" y="137" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">Candidate pairs</text>
+        <path class="line" d="M320 152V204" marker-end="url(#ah)"/>
+        <text x="332" y="176" font-size="13" class="soft">add points, look for</text>
+        <text x="332" y="192" font-size="13" class="soft">warning signs (steps 3–4)</text>
+        <rect class="nbox" x="220" y="206" width="200" height="42" rx="8"/>
+        <text x="320" y="233" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">Scored pairs</text>
+        <path id="p1" class="line" d="M320 248C320 280 85 270 85 318" marker-end="url(#ah)"/>
+        <path id="p2" class="line" d="M320 248C320 285 245 280 245 318" marker-end="url(#ah)"/>
+        <path id="p3" class="line" d="M320 248C320 285 400 280 400 318" marker-end="url(#ah)"/>
+        <path id="p4" class="line" d="M320 248C320 280 560 270 560 318" marker-end="url(#ah)"/>
+        <rect class="nbox f-propose" x="20" y="320" width="130" height="56" rx="8"/>
+        <text x="85" y="344" text-anchor="middle" font-size="16" font-weight="700" class="t-p">Propose</text>
+        <text x="85" y="364" text-anchor="middle" font-size="12" class="t-p">0.90+, no warning</text>
+        <rect class="nbox f-review" x="180" y="320" width="130" height="56" rx="8"/>
+        <text x="245" y="344" text-anchor="middle" font-size="16" font-weight="700" class="t-r">Review</text>
+        <text x="245" y="364" text-anchor="middle" font-size="12" class="t-r">0.60+, not proposed</text>
+        <rect class="nbox f-out" x="335" y="320" width="130" height="56" rx="8"/>
+        <text x="400" y="344" text-anchor="middle" font-size="16" font-weight="700" class="t-o">Ruled out</text>
+        <text x="400" y="364" text-anchor="middle" font-size="12" class="t-o">merge not allowed</text>
+        <rect class="nbox f-below" x="495" y="320" width="130" height="56" rx="8"/>
+        <text x="560" y="344" text-anchor="middle" font-size="16" font-weight="700" class="t-b">Not listed</text>
+        <text x="560" y="364" text-anchor="middle" font-size="12" class="t-b">below 0.60, counted</text>
+        <path class="line" d="M85 376C85 410 165 400 165 418" marker-end="url(#ah)"/>
+        <path class="line" d="M245 376C245 405 165 400 165 418" marker-end="url(#ah)"/>
+        <rect class="nbox f-mark" x="40" y="420" width="250" height="42" rx="8"/>
+        <text x="165" y="447" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">A person decides</text>
+        <text x="400" y="400" text-anchor="middle" font-size="12" class="soft">listed with the reason</text>
+        <text x="560" y="400" text-anchor="middle" font-size="12" class="soft">only the count is shown</text>
+        <circle class="dot" r="5"><animateMotion dur="5s" repeatCount="3" path="M320 56V108M320 152V204M320 248C320 280 85 270 85 318"/></circle>
+        <circle class="dot" r="5"><animateMotion dur="5s" begin="1.25s" repeatCount="3" path="M320 56V108M320 152V204M320 248C320 285 245 280 245 318"/></circle>
+        <circle class="dot" r="5"><animateMotion dur="5s" begin="2.5s" repeatCount="3" path="M320 56V108M320 152V204M320 248C320 285 400 280 400 318"/></circle>
+        <circle class="dot" r="5"><animateMotion dur="5s" begin="3.75s" repeatCount="3" path="M320 56V108M320 152V204M320 248C320 280 560 270 560 318"/></circle>
+      </svg>
+    </div>
+    <figcaption>The whole journey. Every pair ends in exactly one of four places, and only Propose and Review pairs go to a person for a decision.</figcaption>
+  </figure>
+
+  <section class="step">
+    <div class="num">1</div>
+    <div class="stack">
+      <h2>Tidy each record before comparing</h2>
+      <p>People type the same thing in different ways. Before comparing, the tool rewrites each detail in one standard form, so small typing differences don't hide a match.</p>
+      <div class="tidy" role="group" aria-label="How two names are tidied, step by step">
+        <div class="chips" id="tidy-chips"></div>
+        <div class="tline"><span>Record A</span><output id="tidy-a">Shree Ganesh Traders Pvt. Ltd.</output></div>
+        <div class="tline"><span>Record B</span><output id="tidy-b">Ganesh Shree Traders</output></div>
+        <div class="tbar"><button type="button" class="btn" id="tidy-play">Play</button><span class="tverdict" id="tidy-verdict" aria-live="polite">Different as typed.</span></div>
+      </div>
+      <div class="cards">
+        <div class="ba"><span class="from">+91 98200 12345</span><span class="arrow">→</span><span class="to">9820012345</span>
+          <small>Phone numbers: only the last ten digits count, so country codes and spaces don't matter.</small></div>
+        <div class="ba"><span class="from">Elbow 25mm</span><span class="arrow">→</span><span class="to">same as “Elbow 25 mm”</span>
+          <small>Products: a number stuck to its unit counts the same as one with a space.</small></div>
+        <div class="ba"><span class="from">N/A, Unknown, TBD, phone 0000000000</span><span class="arrow">→</span><span class="to">(treated as empty)</span>
+          <small>Filler values are not evidence. Two records that both say “N/A” are not a match.</small></div>
+      </div>
+      <p class="note">Records left out completely: customers and suppliers whose privacy setting is anything other than normal, or missing. They are counted, never compared.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="num">2</div>
+    <div class="stack">
+      <h2>Pick which pairs are worth a look</h2>
+      <p>Comparing every record with every other would take far too long. So the tool only compares two records when they already share something: the same email, phone, customer code, website or product code, the same full name, or at least one word of the name (three letters or longer).</p>
+      <figure>
+        <div class="scroll">
+          <svg class="diagram wide" viewBox="0 0 680 320" role="img" aria-label="Records are sorted into groups by what they share. Pairs form only inside a group. A pair found in two groups is scored once. A group with more than 50 records is skipped. A record that shares nothing is never compared.">
+            <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+            <text x="10" y="14" font-size="12" font-weight="700" class="soft">RECORDS</text>
+            <text x="260" y="14" font-size="12" font-weight="700" class="soft">GROUPS BY WHAT THEY SHARE</text>
+            <text x="520" y="14" font-size="12" font-weight="700" class="soft">PAIRS TO SCORE</text>
+            <g font-size="13" fill="currentColor">
+              <rect class="nbox" x="10" y="24" width="190" height="32" rx="6"/><text x="20" y="45"><tspan font-weight="700">A</tspan>  Shree Ganesh Traders</text>
+              <rect class="nbox" x="10" y="72" width="190" height="32" rx="6"/><text x="20" y="93"><tspan font-weight="700">B</tspan>  Ganesh Shree Traders</text>
+              <rect class="nbox" x="10" y="120" width="190" height="32" rx="6"/><text x="20" y="141"><tspan font-weight="700">C</tspan>  Ganesh Hardware Supply</text>
+              <rect class="nbox" x="10" y="168" width="190" height="32" rx="6"/><text x="20" y="189"><tspan font-weight="700">D</tspan>  Kaveri Foods</text>
+              <rect class="nbox" x="10" y="216" width="190" height="32" rx="6"/><text x="20" y="237"><tspan font-weight="700">E</tspan>  Sahyadri Snacks</text>
+              <rect class="nbox dash" x="10" y="264" width="190" height="32" rx="6"/><text x="20" y="285"><tspan font-weight="700">F</tspan>  Lotus Tailors</text>
+            </g>
+            <text x="20" y="312" font-size="12" class="soft">F shares nothing, so it is never compared</text>
+            <g class="line">
+              <path d="M200 40L262 48"/><path d="M200 88L262 50"/><path d="M200 136L262 52"/>
+              <path d="M200 42L262 118"/><path d="M200 90L262 120"/>
+              <path d="M200 184L262 196"/><path d="M200 232L262 200"/>
+              <path class="dash" d="M200 138L262 266"/>
+            </g>
+            <g font-size="13" fill="currentColor">
+              <rect class="nbox" x="262" y="28" width="190" height="44" rx="8"/><text x="357" y="55" text-anchor="middle">name word “ganesh”</text>
+              <rect class="nbox" x="262" y="98" width="190" height="44" rx="8"/><text x="357" y="125" text-anchor="middle">same phone …12345</text>
+              <rect class="nbox" x="262" y="176" width="190" height="44" rx="8"/><text x="357" y="203" text-anchor="middle">same website</text>
+              <rect class="nbox dash f-below" x="262" y="246" width="190" height="50" rx="8"/><text x="357" y="266" text-anchor="middle">name word “supply”</text>
+              <text x="357" y="285" text-anchor="middle" font-size="12" class="t-b">62 records: too common, skipped</text>
+            </g>
+            <g class="line" color="var(--muted)">
+              <path d="M452 46L518 40" marker-end="url(#ah2)"/><path d="M452 50L518 82" marker-end="url(#ah2)"/><path d="M452 54L518 124" marker-end="url(#ah2)"/>
+              <path d="M452 118L518 44" marker-end="url(#ah2)"/>
+              <path d="M452 198L518 198" marker-end="url(#ah2)"/>
+            </g>
+            <g font-size="14" font-weight="700" fill="currentColor">
+              <rect class="nbox f-mark" x="520" y="26" width="150" height="30" rx="6"/><text x="595" y="46" text-anchor="middle">A – B</text>
+              <rect class="nbox" x="520" y="68" width="150" height="30" rx="6"/><text x="595" y="88" text-anchor="middle">A – C</text>
+              <rect class="nbox" x="520" y="110" width="150" height="30" rx="6"/><text x="595" y="130" text-anchor="middle">B – C</text>
+              <rect class="nbox" x="520" y="184" width="150" height="30" rx="6"/><text x="595" y="204" text-anchor="middle">D – E</text>
+            </g>
+            <text x="595" y="160" text-anchor="middle" font-size="12" class="soft">A – B found in two</text>
+            <text x="595" y="174" text-anchor="middle" font-size="12" class="soft">groups, scored once</text>
+          </svg>
+        </div>
+        <figcaption>Pairs form only inside a group. A and B meet in more than one group (here a name word and a phone) but are scored once. Only some groups are drawn. The “supply” group is too big, so it makes no pairs; C still meets A and B through “ganesh”. F shares nothing with anyone and is never compared.</figcaption>
+      </figure>
+      <ul class="plain">
+        <li><b>Shared inboxes don't count.</b> If more than 5 records share one email, phone or code, it is probably an office switchboard or a dummy value, so it is not used to pair records or as evidence.</li>
+        <li><b>Very common words are skipped.</b> If more than 50 records share one name word, such as “supply”, that word is too common to pair on. The report says how many were skipped.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="num">3</div>
+    <div class="stack">
+      <h2>Add up the clues</h2>
+      <p>For each pair, every detail the two records share adds points. Stronger clues add more. The total stops at 1.</p>
+      <div class="weights">
+        <div class="wt">
+          <h3>Customers and suppliers</h3>
+          <div class="wrow"><span>Same customer code</span><span class="bar"><i style="width:70%"></i></span><span class="wv">0.70</span></div>
+          <div class="wrow"><span>Same email</span><span class="bar"><i style="width:60%"></i></span><span class="wv">0.60</span></div>
+          <div class="wrow"><span>Same name</span><span class="bar"><i style="width:60%"></i></span><span class="wv">0.60</span></div>
+          <div class="wrow"><span>Similar name</span><span class="bar"><i style="width:60%"></i></span><span class="wv">0.60</span></div>
+          <div class="wrow"><span>Same phone</span><span class="bar"><i style="width:50%"></i></span><span class="wv">0.50</span></div>
+          <div class="wrow"><span>Same website</span><span class="bar"><i style="width:20%"></i></span><span class="wv">0.20</span></div>
+          <div class="wrow"><span>Same city and postal code</span><span class="bar"><i style="width:15%"></i></span><span class="wv">0.15</span></div>
+        </div>
+        <div class="wt">
+          <h3>Products</h3>
+          <div class="wrow"><span>Same code or SKU</span><span class="bar"><i style="width:70%"></i></span><span class="wv">0.70</span></div>
+          <div class="wrow"><span>Same name</span><span class="bar"><i style="width:60%"></i></span><span class="wv">0.60</span></div>
+          <div class="wrow"><span>Similar name</span><span class="bar"><i style="width:55%"></i></span><span class="wv">0.55</span></div>
+          <div class="wrow"><span>Same category</span><span class="bar"><i style="width:10%"></i></span><span class="wv">0.10</span></div>
+          <div class="wrow"><span>Same unit of measure</span><span class="bar"><i style="width:5%"></i></span><span class="wv">0.05</span></div>
+        </div>
+      </div>
+      <p><b>What “similar name” means:</b> after tidying, the two names are at least 90% alike, about one or two letters apart (“Meera Iyer” and “Meera Iyre”). For products, it also counts when one name is the other with extra words added, like a brand in front (“Arlo Door Closer Heavy” and “Door Closer Heavy”). The shorter name needs at least three words, and no added word may contain a number, because a number is usually a size or a model.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="num">4</div>
+    <div class="stack">
+      <h2>Hold back pairs with a warning sign</h2>
+      <p>Some pairs have a reason for doubt. If such a pair scores 0.60 or more, it is never proposed as a merge, even at 0.90 or above. It goes to a person for review, and the report says why. Below 0.60 it stays unlisted either way.</p>
+      <ul class="plain">
+        <li><b>A key detail disagrees.</b> Both records have a customer code, email or phone (for products: a code or SKU), and the values are different.</li>
+        <li><b>Names are only similar</b> and there is no matching customer code (customers and suppliers only). Two people a letter apart can share a family email or phone.</li>
+        <li><b>Different roles</b> (customers and suppliers only). For example, one record is a customer and the other a supplier.</li>
+      </ul>
+      <p class="note">For products, a code stored in the other record's SKU field is not a disagreement, as long as their other codes don't conflict.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="num">5</div>
+    <div class="stack">
+      <h2>Sort the score into a confidence group</h2>
+      <div class="ruler" aria-hidden="true">
+        <div class="track"><div class="t-below">Not listed</div><div class="t-review">Review</div><div class="t-propose">Propose</div></div>
+        <div class="ticks"><span style="left:0">0</span><span style="left:60%">0.60</span><span style="left:90%">0.90</span><span style="left:100%">1</span></div>
+      </div>
+      <ul class="plain">
+        <li><span class="pill p-propose">Propose</span> Score 0.90 or more, and nothing held it back. The tool suggests merging.</li>
+        <li><span class="pill p-review">Review</span> Score from 0.60 up to just below 0.90, or 0.90 or more but held back in step 4. A person should look closely.</li>
+        <li><span class="pill p-below">Not listed</span> Score below 0.60. Counted in the report, not listed.</li>
+      </ul>
+      <p class="note">The score comes from rules, not probability: 0.90 does not mean “90% likely”. On a made-up test set kept aside for checking, no proposed merge was wrong, and about two in three review pairs were real duplicates. That doesn't promise the same on real data.</p>
+    </div>
+  </section>
+
+  <section class="stack" aria-labelledby="try">
+    <span class="eyebrow">Try it</span>
+    <h2 id="try">Score a pair yourself</h2>
+    <p>Tick what two records share. This uses the tool's points and warning signs for a pair it has already picked to compare, assuming no rule in step 6 rules the pair out.</p>
+    <div class="calc">
+      <div class="seg" role="group" aria-label="Kind of record">
+        <button type="button" id="kind-party" aria-pressed="true">Customer or supplier</button>
+        <button type="button" id="kind-item" aria-pressed="false">Product</button>
+      </div>
+      <div class="cols">
+        <fieldset id="clues"><legend>What they share</legend></fieldset>
+        <fieldset id="flags"><legend>Warning signs</legend></fieldset>
+      </div>
+      <div class="result" aria-live="polite">
+        <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><span class="score" id="score">0.00</span><span id="band" class="pill p-below">Not listed</span></div>
+        <div class="ruler" aria-hidden="true">
+          <div class="track"><div class="t-below"></div><div class="t-review"></div><div class="t-propose"></div></div>
+          <span class="needle" id="needle" style="left:0"></span>
+        </div>
+        <p class="why" id="why"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="num">6</div>
+    <div class="stack">
+      <h2>Rule out pairs that must not be merged</h2>
+      <p>Some pairs score 0.60 or more, but a rule says they must not be merged. These are listed as “ruled out”, with the reason, and never suggested as a merge.</p>
+      <div class="grid2">
+        <div class="box"><h3>Customers and suppliers</h3>
+          <ul class="plain">
+            <li>Someone already marked one of them as an <b>allowed duplicate</b></li>
+            <li>They belong to <b>different companies</b> in the system</li>
+            <li><b>Different party types</b>, such as a person and an organisation</li>
+          </ul></div>
+        <div class="box"><h3>Products</h3>
+          <ul class="plain">
+            <li>They belong to <b>different companies</b></li>
+            <li><b>Different item types</b></li>
+            <li><b>Different units</b>, such as boxes and pieces</li>
+            <li>One is a <b>variant</b> of the other (its code is listed among the other's variants)</li>
+          </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="num">7</div>
+    <div class="stack">
+      <h2>Suggest which record to keep</h2>
+      <p>For each pair, the tool suggests which record should stay if the merge is approved. It goes down this list and stops at the first step that tells the two apart:</p>
+      <ol class="ladder">
+        <li><span><b>More linked records.</b> The one with more orders, payments, deals and other records pointing at it. A merge would have to move each link, so keeping the busier one moves fewer. Counted for proposed merges only.</span></li>
+        <li><span><b>Created earlier.</b> The older record.</span></li>
+        <li><span><b>More fields filled in.</b> The more complete record.</span></li>
+        <li><span><b>First ID in text order.</b> A plain tie-breaker, so the answer is always the same.</span></li>
+      </ol>
+      <p class="note">If a step can't be checked, for example because a creation date is missing, it is skipped and the report says so. The report also lists each field where the two records differ. Hidden fields, and private ones like tax IDs or bank details, are never shown.</p>
+    </div>
+  </section>
+
+  <section class="stack" aria-labelledby="ex">
+    <span class="eyebrow">Made-up examples</span>
+    <h2 id="ex">Four pairs, start to finish</h2>
+    <p>Each bar stacks the points from every shared clue. The lines mark 0.60 and 0.90; the striped end is above 1, where points stop counting.</p>
+    <div class="stack-ex" id="examples"></div>
+    <div><button type="button" class="btn" id="ex-play">Replay the bars</button></div>
+  </section>
+
+  <section class="final stack">
+    <h2>Then a person decides</h2>
+    <p>The tool writes a report and stops. It does not merge, edit or delete anything. A person reads each pair, marks it accepted or rejected, and makes any change through the business system with the usual approval.</p>
+  </section>
+
+  <footer>
+    The rules described here are rules version 3, frozen so that the held-back accuracy check stays valid. Examples and names on this page are invented; no real customer or product data is shown.
+  </footer>
+</main>
+
+<script>
+(function () {
+  var PROPOSE = 0.9, REVIEW = 0.6;
+  var SETS = {
+    party: {
+      clues: [
+        ["customer_code", "Same customer code", 0.7],
+        ["email", "Same email", 0.6],
+        ["phone", "Same phone", 0.5],
+        ["website", "Same website", 0.2],
+        ["city_postal", "Same city and postal code", 0.15]
+      ],
+      names: [["none", "Names don't match", 0], ["name", "Same name", 0.6], ["near_name", "Similar name", 0.6]],
+      flags: [
+        ["conflict", "Customer code, email or phone disagree"],
+        ["roles", "Different roles (for example customer and supplier)"]
+      ]
+    },
+    item: {
+      clues: [
+        ["code", "Same code or SKU", 0.7],
+        ["category", "Same category", 0.1],
+        ["uom", "Same unit of measure", 0.05]
+      ],
+      names: [["none", "Names don't match", 0], ["name", "Same name", 0.6], ["near_name", "Similar name", 0.55]],
+      flags: [["conflict", "Code or SKU disagree"]]
+    }
+  };
+  var kind = "party";
+  var clues = document.getElementById("clues"), flags = document.getElementById("flags");
+
+  function opt(type, name, id, label, w, checked) {
+    var l = document.createElement("label");
+    l.className = "opt";
+    l.innerHTML = '<input type="' + type + '" name="' + name + '" id="' + id + '"' + (checked ? " checked" : "") + '>' +
+      "<span>" + label + "</span>" + (w ? '<span class="w">+' + w.toFixed(2) + "</span>" : "");
+    return l;
+  }
+  function build() {
+    var s = SETS[kind];
+    clues.innerHTML = "<legend>What they share</legend>";
+    flags.innerHTML = "<legend>Warning signs</legend>";
+    s.names.forEach(function (n, i) { clues.appendChild(opt("radio", "nm", kind + "-n-" + n[0], n[1], n[2], i === 0)); });
+    s.clues.forEach(function (c) { clues.appendChild(opt("checkbox", "c", kind + "-c-" + c[0], c[1], c[2], false)); });
+    s.flags.forEach(function (f) { flags.appendChild(opt("checkbox", "f", kind + "-f-" + f[0], f[1], 0, false)); });
+    if (kind === "party") {
+      var p = document.createElement("p");
+      p.className = "note";
+      p.textContent = "Similar names without a matching customer code are held back automatically.";
+      flags.appendChild(p);
+    }
+    if (kind === "item") {
+      var q = document.createElement("p");
+      q.className = "note";
+      q.textContent = "Products have no automatic hold for similar names.";
+      flags.appendChild(q);
+    }
+    update();
+  }
+  function on(id) { var e = document.getElementById(id); return !!(e && e.checked); }
+  function update() {
+    var s = SETS[kind], sum = 0, holds = [];
+    var nm = s.names.filter(function (n) { return on(kind + "-n-" + n[0]); })[0] || s.names[0];
+    sum += nm[2];
+    s.clues.forEach(function (c) { if (on(kind + "-c-" + c[0])) sum += c[2]; });
+    if (on(kind + "-f-conflict")) holds.push(kind === "party" ? "a key detail disagrees" : "the codes disagree");
+    if (kind === "party" && on("party-f-roles")) holds.push("the roles differ");
+    if (kind === "party" && nm[0] === "near_name" && !on("party-c-customer_code")) holds.push("the names are only similar and there is no matching customer code");
+    var score = Math.round(Math.min(1, sum) * 100) / 100;
+    var band = score < REVIEW ? "below" : (score >= PROPOSE && !holds.length ? "propose" : "review");
+    document.getElementById("score").textContent = score.toFixed(2);
+    var b = document.getElementById("band");
+    b.className = "pill p-" + band;
+    b.textContent = { propose: "Propose", review: "Review", below: "Not listed" }[band];
+    document.getElementById("needle").style.left = "calc(" + (score * 100) + "% - 1.5px)";
+    var why;
+    if (band === "below") why = "Below 0.60: the clues are too weak. The pair is counted but not listed.";
+    else if (band === "propose") why = "0.90 or more with no warning sign: the tool suggests merging. A person still decides.";
+    else if (score >= PROPOSE) why = "High score, but held at review because " + holds.join(" and ") + ".";
+    else why = "Between 0.60 and 0.90: a person should look closely." + (holds.length ? " Also, " + holds.join(" and ") + "." : "");
+    if (sum > 1) why += " (The clues add up to " + sum.toFixed(2) + ", but the score stops at 1.)";
+    document.getElementById("why").textContent = why;
+  }
+  function setKind(k) {
+    kind = k;
+    document.getElementById("kind-party").setAttribute("aria-pressed", k === "party");
+    document.getElementById("kind-item").setAttribute("aria-pressed", k === "item");
+    build();
+  }
+  document.getElementById("kind-party").addEventListener("click", function () { setKind("party"); });
+  document.getElementById("kind-item").addEventListener("click", function () { setKind("item"); });
+  document.querySelector(".calc").addEventListener("change", update);
+  build();
+
+  /* tidy stepper */
+  var STAGES = [
+    ["As typed", "Shree Ganesh Traders Pvt. Ltd.", "Ganesh Shree Traders"],
+    ["Small letters", "shree ganesh traders pvt. ltd.", "ganesh shree traders"],
+    ["No punctuation", "shree ganesh traders pvt ltd", "ganesh shree traders"],
+    ["Drop “Pvt Ltd”", "shree ganesh traders", "ganesh shree traders"],
+    ["Words in A–Z order", "ganesh shree traders", "ganesh shree traders"]
+  ];
+  var chips = document.getElementById("tidy-chips"), ta = document.getElementById("tidy-a"), tb = document.getElementById("tidy-b");
+  var verdict = document.getElementById("tidy-verdict"), stage = 0, timer = null;
+  function reduced() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+  STAGES.forEach(function (s, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = (i + 1) + ". " + s[0]; b.id = "tidy-chip-" + i;
+    b.addEventListener("click", function () { stop(); show(i); });
+    chips.appendChild(b);
+  });
+  function show(i) {
+    stage = i;
+    [ta, tb].forEach(function (o, k) {
+      if (!reduced()) { o.classList.add("flash"); setTimeout(function () { o.classList.remove("flash"); }, 120); }
+      o.textContent = STAGES[i][k + 1];
+    });
+    Array.prototype.forEach.call(chips.children, function (c, k) { c.setAttribute("aria-current", k === i ? "step" : "false"); });
+    verdict.textContent = STAGES[i][1] === STAGES[i][2] ? "Now identical: this counts as the same name." : "Still different.";
+    verdict.style.color = STAGES[i][1] === STAGES[i][2] ? "var(--propose)" : "var(--muted)";
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } document.getElementById("tidy-play").textContent = "Play"; }
+  document.getElementById("tidy-play").addEventListener("click", function () {
+    if (timer) { stop(); return; }
+    show(0);
+    this.textContent = "Pause";
+    timer = setInterval(function () { if (stage >= STAGES.length - 1) { stop(); return; } show(stage + 1); }, 1400);
+  });
+  show(0);
+
+  /* stacked example bars: scale runs 0 to 1.2 so points above the cap stay visible */
+  var EX = [
+    { a: "Shree Ganesh Traders Pvt. Ltd.", b: "Ganesh Shree Traders", clues: [["same name", 0.6], ["same phone", 0.5]],
+      band: "propose", why: "1.10 in points, counted as 1.00. No warning sign, so the tool suggests merging." },
+    { a: "Meera Iyer", b: "Meera Iyre", clues: [["similar name", 0.6], ["same email", 0.6]],
+      band: "review", why: "Scores 1.00 but is held back: the names are only similar and there is no customer code. Could be two people sharing a family email." },
+    { a: "Hex Bolt M6 (pieces)", b: "Hex Bolt M8 (pieces)", clues: [["similar name", 0.55], ["same unit", 0.05]],
+      band: "review", why: "Exactly 0.60. A person will see these are two sizes and reject the pair." },
+    { a: "Kaveri Foods, Pune 411001", b: "Sahyadri Snacks, Pune 411001", clues: [["same website", 0.2], ["same city and postal code", 0.15]],
+      band: "below", why: "0.35 is below 0.60: counted in the report, not listed." }
+  ];
+  var LABEL = { propose: "Propose", review: "Review", below: "Not listed" };
+  var host = document.getElementById("examples");
+  function pct(v) { return (v / 1.2 * 100) + "%"; }
+  EX.forEach(function (e) {
+    var sum = e.clues.reduce(function (t, c) { return t + c[1]; }, 0), score = Math.min(1, sum);
+    var row = document.createElement("div"); row.className = "sx";
+    var segs = e.clues.map(function (c) {
+      var lbl = c[1] >= 0.15 ? c[0] + " " + c[1].toFixed(2) : c[1].toFixed(2);
+      return '<i style="width:' + pct(c[1]) + '" title="' + c[0] + " " + c[1].toFixed(2) + '">' + lbl + "</i>";
+    }).join("");
+    row.innerHTML =
+      '<div class="sx-head"><span class="sx-names">' + e.a + " <span>and</span> " + e.b + "</span>" +
+      '<span><span class="mono">' + score.toFixed(2) + '</span> <span class="pill p-' + e.band + '">' + LABEL[e.band] + "</span></span></div>" +
+      '<div class="sbar" aria-hidden="true"><div class="segs grow">' + segs + '</div><div class="cap"></div>' +
+      '<span class="th" style="left:' + pct(0.6) + '"></span><span class="th" style="left:' + pct(0.9) + '"></span></div>' +
+      '<div class="sscale"><span style="left:' + pct(0.6) + '">0.60</span><span style="left:' + pct(0.9) + '">0.90</span><span style="left:' + pct(1) + '">1</span></div>' +
+      '<p class="sx-why"><b>' + e.clues.map(function (c) { return c[0] + " " + c[1].toFixed(2); }).join(" + ") +
+      " = " + sum.toFixed(2) + ".</b> " + e.why + "</p>";
+    host.appendChild(row);
+  });
+  document.getElementById("ex-play").addEventListener("click", function () {
+    host.querySelectorAll(".segs").forEach(function (s) { s.classList.remove("grow"); void s.offsetWidth; s.classList.add("grow"); });
+  });
+})();
+</script>
+</body>
+</html>

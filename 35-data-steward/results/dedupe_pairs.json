@@ -1,0 +1,9 @@
+[
+  {
+    "kind": "item",
+    "id_a": "4a53117b-ee9f-4435-963f-efd0bc300ca5",
+    "id_b": "95f50d4a-b6cc-40c5-8a9e-9bcba21db781",
+    "confidence": 0.6,
+    "reason": "similar names; same unit of measure; held at review: different item codes"
+  }
+]

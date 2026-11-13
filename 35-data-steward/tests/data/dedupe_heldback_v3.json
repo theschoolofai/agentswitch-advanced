@@ -1,0 +1,2657 @@
+{
+ "about": "Second made-up held-back set for data_steward.dedupe (v3), independent of the first; every value is invented.",
+ "test_tags": [
+  "lumen-regress",
+  "quokka-ci"
+ ],
+ "party": [
+  {
+   "id": "v3p01",
+   "name": "Saffron Lane Bistro",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "bookings@saffronlane.test",
+   "phone": "(646) 555-0211",
+   "type": "organization"
+  },
+  {
+   "id": "v3p02",
+   "name": "SAFFRON LANE  BISTRO",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "Bookings@SaffronLane.TEST",
+   "phone": "646.555.0211",
+   "type": "organization"
+  },
+  {
+   "id": "v3p03",
+   "name": "Bellcroft Upholstery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "7185550212"
+  },
+  {
+   "id": "v3p04",
+   "name": "Bellcroft Upholstry",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "+1 718 555 0212"
+  },
+  {
+   "id": "v3p05",
+   "name": "Quillon Textiles",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Harrowgate",
+     "postal": "41207"
+    }
+   ]
+  },
+  {
+   "id": "v3p06",
+   "name": "Quillon Textile",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Harrowgate",
+     "postal": "41207"
+    }
+   ]
+  },
+  {
+   "id": "v3p07",
+   "name": "Marvesta",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "hello@marvesta.test"
+  },
+  {
+   "id": "v3p08",
+   "name": "Marvessta",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p09",
+   "name": "Bhandari Polymers Pvt. Ltd.",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "finance@bhandaripoly.test",
+   "type": "organization"
+  },
+  {
+   "id": "v3p10",
+   "name": "Bhandari Polymers Private Limited",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "finance@bhandaripoly.test",
+   "type": "organization"
+  },
+  {
+   "id": "v3p11",
+   "name": "Stellwick Robotics Incorporated",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "https://www.stellwick.test/"
+  },
+  {
+   "id": "v3p12",
+   "name": "Stellwick Robotics Inc.",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "stellwick.test"
+  },
+  {
+   "id": "v3p13",
+   "name": "Aurelian Partners Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "contact@aurelian-uk.test",
+   "type": "organization"
+  },
+  {
+   "id": "v3p14",
+   "name": "Aurelian Partners SAS",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "bonjour@aurelian-fr.test",
+   "type": "organization"
+  },
+  {
+   "id": "v3p15",
+   "name": "Meenakshi Iyer",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "+91 (44) 555-0218",
+   "type": "individual"
+  },
+  {
+   "id": "v3p16",
+   "name": "Meenakshi Iyer",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "044-555-0218",
+   "type": "individual"
+  },
+  {
+   "id": "v3p17",
+   "name": "Crestline Diagnostic Lab",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "555-0219"
+  },
+  {
+   "id": "v3p18",
+   "name": "Crestline Diagnostic Laboratory",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "555 0219"
+  },
+  {
+   "id": "v3p19",
+   "name": "Tidewater Kitchens",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "design@tidewaterkitchens.test"
+  },
+  {
+   "id": "v3p20",
+   "name": "TWK Design Studio",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "design@tidewaterkitchens.test"
+  },
+  {
+   "id": "v3p21",
+   "name": "Vikram Desai",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "desai.house@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p22",
+   "name": "Anjali Desai",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "desai.house@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p23",
+   "name": "Copperleaf Florist",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "office@tallybooks.test"
+  },
+  {
+   "id": "v3p24",
+   "name": "Granite Peak Plumbing",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "office@tallybooks.test"
+  },
+  {
+   "id": "v3p25",
+   "name": "Sunny Side Daycare",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "office@tallybooks.test"
+  },
+  {
+   "id": "v3p26",
+   "name": "Karan Malhotra",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "malhotra.fam@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p27",
+   "name": "Kiran Malhotra",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "malhotra.fam@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p28",
+   "name": "Elodie Marchetti",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "elodie.m@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p29",
+   "name": "Elodie Marchette",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "elodie.m@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p30",
+   "name": "Bansal Hardware",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "7135550231"
+  },
+  {
+   "id": "v3p31",
+   "name": "Bansali Hardware",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "7135550232"
+  },
+  {
+   "id": "v3p32",
+   "name": "[Indore] Lotus Sarees",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "LTS-IND"
+  },
+  {
+   "id": "v3p33",
+   "name": "[Surat] Lotus Sarees",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "LTS-SUR"
+  },
+  {
+   "id": "v3p34",
+   "name": "[OLD] Pembury Motors",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "3035550235"
+  },
+  {
+   "id": "v3p35",
+   "name": "Pembury Motors",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "303-555-0235"
+  },
+  {
+   "id": "v3p36",
+   "name": "Kestrel Coffee Roasters",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ashcombe",
+     "postal": "44918"
+    }
+   ]
+  },
+  {
+   "id": "v3p37",
+   "name": "Nimbus Laundromat",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ashcombe",
+     "postal": "44918"
+    }
+   ]
+  },
+  {
+   "id": "v3p38",
+   "name": "Orla Accountancy",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ashcombe",
+     "postal": "44918"
+    }
+   ]
+  },
+  {
+   "id": "v3p39",
+   "name": "Suresh Nair",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Larkhaven",
+     "postal": "50731"
+    }
+   ],
+   "phone": "4695550241",
+   "type": "individual"
+  },
+  {
+   "id": "v3p40",
+   "name": "Suresh Nair",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Larkhaven",
+     "postal": "50731"
+    }
+   ],
+   "phone": "4695550242",
+   "type": "individual"
+  },
+  {
+   "id": "v3p41",
+   "name": "Moonfield Pottery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Larkhaven",
+     "postal": "50731"
+    }
+   ]
+  },
+  {
+   "id": "v3p42",
+   "name": "Moonfield Pottery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Larkhaven",
+     "postal": "50731"
+    }
+   ]
+  },
+  {
+   "id": "v3p43",
+   "name": "Harbourline Cartons",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "email": "ops@harbourline.test"
+  },
+  {
+   "id": "v3p44",
+   "name": "Harbourline Cartons",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ],
+   "email": "ops@harbourline.test"
+  },
+  {
+   "id": "v3p45",
+   "name": "Tobias Wren",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "employee",
+     "active": true
+    }
+   ],
+   "phone": "9715550246",
+   "type": "individual"
+  },
+  {
+   "id": "v3p46",
+   "name": "Tobias Wren",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "971 555 0246",
+   "type": "individual"
+  },
+  {
+   "id": "v3p47",
+   "name": "Ravensworth Logistics",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "CUST-8842"
+  },
+  {
+   "id": "v3p48",
+   "name": "Ravensworh Logistics",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "CUST-8842"
+  },
+  {
+   "id": "v3p49",
+   "name": "Cobalt Creek Outfitters",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "CCO-02",
+   "email": "orders@cobaltcreek.test"
+  },
+  {
+   "id": "v3p50",
+   "name": "Cobalt Creek Outfitters",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "CCO-2002",
+   "email": "orders@cobaltcreek.test"
+  },
+  {
+   "id": "v3p51",
+   "name": "Driftwood Books",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "N/A"
+  },
+  {
+   "id": "v3p52",
+   "name": "Maple Hollow Dental",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "N/A"
+  },
+  {
+   "id": "v3p53",
+   "name": "Sparrow Cycles",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "N/A"
+  },
+  {
+   "id": "v3p54",
+   "name": "Glenmore Florals",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "999-999-9999"
+  },
+  {
+   "id": "v3p55",
+   "name": "Quayside Barbers",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "9999999999"
+  },
+  {
+   "id": "v3p56",
+   "name": "Tamarind Kitchen",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "999 999 9999",
+   "email": "none@example.test"
+  },
+  {
+   "id": "v3p57",
+   "name": "Brightwater Tutors",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "none@example.test"
+  },
+  {
+   "id": "v3p58",
+   "name": "Hawthorne Vets",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "clinic@hawthornevets.test",
+   "allow_duplicate": true
+  },
+  {
+   "id": "v3p59",
+   "name": "Hawthorne Vets",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "clinic@hawthornevets.test"
+  },
+  {
+   "id": "v3p60",
+   "name": "Leila Haddad",
+   "privacy_state": "anonymized",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "7735550260",
+   "type": "individual"
+  },
+  {
+   "id": "v3p61",
+   "name": "Leila Haddad",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "773-555-0260",
+   "type": "individual"
+  },
+  {
+   "id": "v3p62",
+   "name": "Corbel Signworks",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "print@corbelsign.test"
+  },
+  {
+   "id": "v3p63",
+   "name": "Corbel Signworks",
+   "privacy_state": "normal",
+   "company_id": "cmp-20",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "print@corbelsign.test"
+  },
+  {
+   "id": "v3p64",
+   "name": "Arvind Shah",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "6505550264",
+   "type": "individual"
+  },
+  {
+   "id": "v3p65",
+   "name": "Arvind Shah",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "6505550264",
+   "type": "organization"
+  },
+  {
+   "id": "v3p66",
+   "name": "Wexford Stoneworks",
+   "privacy_state": "normal",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "8015550266"
+  },
+  {
+   "id": "v3p67",
+   "name": "Wexford Stoneworks",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "801-555-0266"
+  },
+  {
+   "id": "v3p68",
+   "name": "[lumen-regress build-201] Halden Kettles Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p69",
+   "name": "[lumen-regress build-202] Halden Kettles Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p70",
+   "name": "[lumen-regress build-205] Halden Kettles Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p71",
+   "name": "[lumen-regress build-207] Halden Kettles Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p72",
+   "name": "[LUMEN-REGRESS build-209] Halden Kettles Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p73",
+   "name": "[lumen-regress build-201] Halden Mugs Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p74",
+   "name": "[quokka-ci job 7] Supplier Gamma",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p75",
+   "name": "[quokka-ci job 8] Supplier Gamma",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p76",
+   "name": "[quokka-ci job 7] Supplier Delta",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p77",
+   "name": "Orinoco Tiles",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "sales@orinocotiles.test",
+   "phone": "4155550277"
+  },
+  {
+   "id": "v3p78",
+   "name": "[lumen-regress build-202] Orinoco Tiles",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "v3p79",
+   "name": "S. P. Kulkarni",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "2145550279",
+   "type": "individual"
+  },
+  {
+   "id": "v3p80",
+   "name": "Sanjay Prakash Kulkarni",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "(214) 555-0279",
+   "type": "individual"
+  },
+  {
+   "id": "v3p81",
+   "name": "P\u00c3\u00a2tisserie No\u00c3\u00ablle",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Kingsreach",
+     "postal": "61840"
+    }
+   ]
+  },
+  {
+   "id": "v3p82",
+   "name": "Patisserie Noelle",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Kingsreach",
+     "postal": "61840"
+    }
+   ]
+  },
+  {
+   "id": "v3p83",
+   "name": "Fletcher & Daughters Joinery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5045550285"
+  },
+  {
+   "id": "v3p84",
+   "name": "Fletcher and Daughters Joinery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "504-555-0285"
+  },
+  {
+   "id": "v3p85",
+   "name": "The Gilded Spoon",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "eat@gildedspoon.test"
+  },
+  {
+   "id": "v3p86",
+   "name": "Gilded Spoon",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "eat@gildedspoon.test"
+  },
+  {
+   "id": "v3p87",
+   "name": "Okafor, Chidinma",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "chidi.okafor@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p88",
+   "name": "Chidinma Okafor",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "chidi.okafor@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "v3p89",
+   "name": "Brightmoor Supply Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "ap+invoices@brightmoor.test"
+  },
+  {
+   "id": "v3p90",
+   "name": "Brightmoor Supply Co",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "ap@brightmoor.test"
+  },
+  {
+   "id": "v3p91",
+   "name": "Daniel Reyes",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "d.reyes@coastmail.test",
+   "addresses": [
+    {
+     "city": "Port Ellery",
+     "postal": "27014"
+    }
+   ],
+   "type": "individual"
+  },
+  {
+   "id": "v3p92",
+   "name": "Daniel Reyes",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "danreyes@highlandnet.test",
+   "addresses": [
+    {
+     "city": "Cairnloch",
+     "postal": "85520"
+    }
+   ],
+   "type": "individual"
+  },
+  {
+   "id": "v3p93",
+   "name": "Atelier Ros\u00e9",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "https://atelierrose.test"
+  },
+  {
+   "id": "v3p94",
+   "name": "Atelier Rose",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "atelierrose.test"
+  },
+  {
+   "id": "v3p95",
+   "name": "Northgate\u00a0Couriers",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "9195550293"
+  },
+  {
+   "id": "v3p96",
+   "name": "Northgate Couriers.",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "919-555-0293"
+  },
+  {
+   "id": "v3p97",
+   "name": "Halberd Group Holdings",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "https://halberd.test",
+   "type": "organization"
+  },
+  {
+   "id": "v3p98",
+   "name": "Halberd Group Logistics",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "https://logistics.halberd.test",
+   "type": "organization"
+  }
+ ],
+ "item": [
+  {
+   "id": "v3i01",
+   "name": "Copper Gate Valve 3/4 in",
+   "code": "GV-075",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-CU-075",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i02",
+   "name": "copper gate valve  3/4 in",
+   "code": "gv-075",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i03",
+   "name": "Gate Valve, Copper, Three-Quarter Inch",
+   "code": "GATEV-TQ",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-CU-075",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i04",
+   "name": "CPVC Tee 20mm",
+   "code": "CT-20",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i05",
+   "name": "CPVC Tee 20 mm",
+   "code": "CT20",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i06",
+   "name": "Zip Bag 150mm Clear",
+   "code": "ZB-150-CL",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i07",
+   "name": "Zip Bag 200mm Clear",
+   "code": "ZB-200-CL",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i08",
+   "name": "Zip Bag 150mm Blue",
+   "code": "ZB-150-BL",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i09",
+   "name": "Floodlight 50W",
+   "code": "FL-50",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i10",
+   "name": "Lumora Floodlight 50W",
+   "code": "LM-FL50",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i11",
+   "name": "Anchor Bolt M10",
+   "code": "AB-M10",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "v3i12",
+   "name": "Anchor Bolt M10",
+   "code": "HILT-M10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i13",
+   "name": "Duct Tape 48mm",
+   "code": "DT-48",
+   "company_id": "cmp-10",
+   "uom": "roll",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i14",
+   "name": "Duct Tape 48mm",
+   "code": "DT-48-BX",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i15",
+   "name": "Boiler Service Visit",
+   "code": "SVC-BLR",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services"
+  },
+  {
+   "id": "v3i16",
+   "name": "Boiler Service Visit",
+   "code": "BLR-KIT",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i17",
+   "name": "Safety Glove Nitrile",
+   "code": "SG-N",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-workwear",
+   "variants": [
+    {
+     "sku": "SG-N-M"
+    },
+    {
+     "sku": "SG-N-L"
+    }
+   ]
+  },
+  {
+   "id": "v3i18",
+   "name": "Safety Glove Nitrile",
+   "code": "SG-N-M",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-workwear"
+  },
+  {
+   "id": "v3i19",
+   "name": "Jasmine Rice 10kg",
+   "code": "RICE-J10",
+   "company_id": "cmp-10",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "v3i20",
+   "name": "Jasmine Rice 10kg",
+   "code": "RICE-J10",
+   "company_id": "cmp-20",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "v3i21",
+   "name": "Ring Binder A4",
+   "code": "BND-01",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i22",
+   "name": "Lever Arch File A4",
+   "code": "BND-01",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i23",
+   "name": "Sticky Notes 76x76",
+   "code": "SN-76",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "000000",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i24",
+   "name": "Correction Tape 5mm",
+   "code": "CRT-5",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "000000",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i25",
+   "name": "Paper Clips 33mm",
+   "code": "PCL-33",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "000000",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i26",
+   "name": "Interior Matt Magnolia 5L",
+   "code": "INT-M5",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "PNT-IM-5",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i27",
+   "name": "Interior Matt Magnolia 5 L",
+   "code": "INTM5",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "pnt-im-5",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i28",
+   "name": "Interior Matt Magnolia 2.5L",
+   "code": "INT-M25",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "PNT-IM-25",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i29",
+   "name": "Wood Filler 500g",
+   "code": "WF-500",
+   "company_id": "cmp-10",
+   "uom": "tub",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i30",
+   "name": "Wood Filer 500g",
+   "code": "WF-0500",
+   "company_id": "cmp-10",
+   "uom": "tub",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "v3i31",
+   "name": "Galvanised Coach Screw 8x60",
+   "code": "GCS-860",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "v3i32",
+   "name": "Galv Coach Screw 8x60",
+   "code": "CS-8-60",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "v3i33",
+   "name": "Sunflower Oil 2L Bottle",
+   "code": "OIL-SF2",
+   "company_id": "cmp-10",
+   "uom": "bottle",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "v3i34",
+   "name": "Sunflower Oil 2L Bottle",
+   "code": "OIL-SF2",
+   "uom": "bottle",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "v3i35",
+   "name": "Ginger Tea 40 Bags",
+   "code": "TEA-GN40",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "v3i36",
+   "name": "Ginger Tea 20 Bags",
+   "code": "TEA-GN20",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "v3i37",
+   "name": "[lumen-regress build-201] Demo Bracket",
+   "code": "QA-DB-201",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i38",
+   "name": "[lumen-regress build-202] Demo Bracket",
+   "code": "QA-DB-202",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i39",
+   "name": "[lumen-regress build-205] Demo Bracket",
+   "code": "QA-DB-205",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i40",
+   "name": "[lumen-regress build-207] Demo Bracket",
+   "code": "QA-DB-207",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i41",
+   "name": "[lumen-regress build-201] Demo Clamp",
+   "code": "QA-DC-201",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i42",
+   "name": "[lumen-regress build-202] Demo Clamp",
+   "code": "QA-DC-202",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i43",
+   "name": "[quokka-ci job 7] Fixture Item 3",
+   "code": "QC-3-J7",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i44",
+   "name": "[quokka-ci job 8] Fixture Item 3",
+   "code": "QC-3-J8",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i45",
+   "name": "[quokka-ci job 9] Fixture Item 3",
+   "code": "QC-3-J9",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i46",
+   "name": "[quokka-ci job 7] Fixture Item 4",
+   "code": "QC-4-J7",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "v3i47",
+   "name": "Drip Irrigation Pipe 20m",
+   "code": "DIP-20",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-garden"
+  },
+  {
+   "id": "v3i48",
+   "name": "Drip Irrigation Pipe 20m",
+   "code": "DIP-20-M",
+   "company_id": "cmp-10",
+   "uom": "m",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-garden"
+  },
+  {
+   "id": "v3i49",
+   "name": "Ball Valve 1 in",
+   "code": "BV-100",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-BL-100",
+   "category_id": "grp-plumb",
+   "variants": [
+    {
+     "sku": "VLV-BL-100-SS"
+    },
+    {
+     "sku": "VLV-BL-100-BR"
+    }
+   ]
+  },
+  {
+   "id": "v3i50",
+   "name": "Ball Valve 1 in Stainless",
+   "code": "BV-100-SS",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-BL-100-SS",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i51",
+   "name": "Porcelain Wall Tile 300x600 White",
+   "code": "TL-3060-WH",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i52",
+   "name": "Wall Tile White 30x60 Porcelain",
+   "code": "PWT-WHT",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "TL-3060-WH",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i53",
+   "name": "Power Strip 6-Way",
+   "code": "PS-6",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i54",
+   "name": "Power Strip 6-Way",
+   "code": "ps 6",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i55",
+   "name": "Monitor Riser Stand",
+   "code": "MR-S1",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i56",
+   "name": "Monitor Riser Stand",
+   "code": "MRS-1",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "v3i57",
+   "name": "Installation Fee - Standard",
+   "code": "INST-S",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services"
+  },
+  {
+   "id": "v3i58",
+   "name": "Installation Fee Standard",
+   "code": "INST-STD",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services"
+  },
+  {
+   "id": "v3i59",
+   "name": "Adjustable Spanner 10in",
+   "code": "AS-10",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tools"
+  },
+  {
+   "id": "v3i60",
+   "name": "Adjustable Spanner 12in",
+   "code": "AS-12",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tools"
+  },
+  {
+   "id": "v3i61",
+   "name": "Adjustable Spanner 10 inch",
+   "code": "AS10",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tools"
+  },
+  {
+   "id": "v3i62",
+   "name": "Epoxy Grout Grey 5kg",
+   "code": "EG-GY5",
+   "company_id": "cmp-10",
+   "uom": "tub",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i63",
+   "name": "Epoxy Grout Gray 5kg",
+   "code": "EGG-5",
+   "company_id": "cmp-10",
+   "uom": "tub",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i64",
+   "name": "Tile Adhesive 1kg",
+   "code": "TA-1K",
+   "company_id": "cmp-10",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i65",
+   "name": "Tile Adhesive 1000 g",
+   "code": "TA-1000G",
+   "company_id": "cmp-10",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i66",
+   "name": "Tile Adhesive 500 g",
+   "code": "TA-500G",
+   "company_id": "cmp-10",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "v3i67",
+   "name": "Compression Fitting 1/2 in",
+   "code": "CF-050",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i68",
+   "name": "Compression Fitting 0.5 in",
+   "code": "CF-0P5",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "v3i69",
+   "name": "Immersion Heater 3kW 230V",
+   "code": "IH-3K-230",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i70",
+   "name": "Immersion Heater 3kW 110V",
+   "code": "IH-3K-110",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i71",
+   "name": "AA Batteries Pack of 10",
+   "code": "BAT-AA10",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "v3i72",
+   "name": "AA Batteries Pack of 12",
+   "code": "BAT-AA12",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  }
+ ],
+ "labels": {
+  "party": {
+   "duplicates": [
+    [
+     "v3p01",
+     "v3p02"
+    ],
+    [
+     "v3p03",
+     "v3p04"
+    ],
+    [
+     "v3p05",
+     "v3p06"
+    ],
+    [
+     "v3p07",
+     "v3p08"
+    ],
+    [
+     "v3p09",
+     "v3p10"
+    ],
+    [
+     "v3p11",
+     "v3p12"
+    ],
+    [
+     "v3p15",
+     "v3p16"
+    ],
+    [
+     "v3p17",
+     "v3p18"
+    ],
+    [
+     "v3p19",
+     "v3p20"
+    ],
+    [
+     "v3p28",
+     "v3p29"
+    ],
+    [
+     "v3p34",
+     "v3p35"
+    ],
+    [
+     "v3p41",
+     "v3p42"
+    ],
+    [
+     "v3p43",
+     "v3p44"
+    ],
+    [
+     "v3p45",
+     "v3p46"
+    ],
+    [
+     "v3p47",
+     "v3p48"
+    ],
+    [
+     "v3p49",
+     "v3p50"
+    ],
+    [
+     "v3p66",
+     "v3p67"
+    ],
+    [
+     "v3p68",
+     "v3p69"
+    ],
+    [
+     "v3p68",
+     "v3p70"
+    ],
+    [
+     "v3p68",
+     "v3p71"
+    ],
+    [
+     "v3p68",
+     "v3p72"
+    ],
+    [
+     "v3p69",
+     "v3p70"
+    ],
+    [
+     "v3p69",
+     "v3p71"
+    ],
+    [
+     "v3p69",
+     "v3p72"
+    ],
+    [
+     "v3p70",
+     "v3p71"
+    ],
+    [
+     "v3p70",
+     "v3p72"
+    ],
+    [
+     "v3p71",
+     "v3p72"
+    ],
+    [
+     "v3p74",
+     "v3p75"
+    ],
+    [
+     "v3p79",
+     "v3p80"
+    ],
+    [
+     "v3p81",
+     "v3p82"
+    ],
+    [
+     "v3p83",
+     "v3p84"
+    ],
+    [
+     "v3p85",
+     "v3p86"
+    ],
+    [
+     "v3p87",
+     "v3p88"
+    ],
+    [
+     "v3p89",
+     "v3p90"
+    ],
+    [
+     "v3p93",
+     "v3p94"
+    ],
+    [
+     "v3p95",
+     "v3p96"
+    ]
+   ],
+   "distinct": [
+    [
+     "v3p13",
+     "v3p14"
+    ],
+    [
+     "v3p21",
+     "v3p22"
+    ],
+    [
+     "v3p23",
+     "v3p24"
+    ],
+    [
+     "v3p23",
+     "v3p25"
+    ],
+    [
+     "v3p24",
+     "v3p25"
+    ],
+    [
+     "v3p26",
+     "v3p27"
+    ],
+    [
+     "v3p30",
+     "v3p31"
+    ],
+    [
+     "v3p32",
+     "v3p33"
+    ],
+    [
+     "v3p36",
+     "v3p37"
+    ],
+    [
+     "v3p36",
+     "v3p38"
+    ],
+    [
+     "v3p37",
+     "v3p38"
+    ],
+    [
+     "v3p39",
+     "v3p40"
+    ],
+    [
+     "v3p39",
+     "v3p41"
+    ],
+    [
+     "v3p39",
+     "v3p42"
+    ],
+    [
+     "v3p40",
+     "v3p41"
+    ],
+    [
+     "v3p40",
+     "v3p42"
+    ],
+    [
+     "v3p51",
+     "v3p52"
+    ],
+    [
+     "v3p51",
+     "v3p53"
+    ],
+    [
+     "v3p52",
+     "v3p53"
+    ],
+    [
+     "v3p54",
+     "v3p55"
+    ],
+    [
+     "v3p54",
+     "v3p56"
+    ],
+    [
+     "v3p55",
+     "v3p56"
+    ],
+    [
+     "v3p56",
+     "v3p57"
+    ],
+    [
+     "v3p58",
+     "v3p59"
+    ],
+    [
+     "v3p60",
+     "v3p61"
+    ],
+    [
+     "v3p62",
+     "v3p63"
+    ],
+    [
+     "v3p64",
+     "v3p65"
+    ],
+    [
+     "v3p73",
+     "v3p68"
+    ],
+    [
+     "v3p73",
+     "v3p69"
+    ],
+    [
+     "v3p73",
+     "v3p70"
+    ],
+    [
+     "v3p73",
+     "v3p71"
+    ],
+    [
+     "v3p73",
+     "v3p72"
+    ],
+    [
+     "v3p76",
+     "v3p74"
+    ],
+    [
+     "v3p76",
+     "v3p75"
+    ],
+    [
+     "v3p77",
+     "v3p78"
+    ],
+    [
+     "v3p91",
+     "v3p92"
+    ],
+    [
+     "v3p97",
+     "v3p98"
+    ]
+   ]
+  },
+  "item": {
+   "duplicates": [
+    [
+     "v3i01",
+     "v3i02"
+    ],
+    [
+     "v3i01",
+     "v3i03"
+    ],
+    [
+     "v3i02",
+     "v3i03"
+    ],
+    [
+     "v3i04",
+     "v3i05"
+    ],
+    [
+     "v3i09",
+     "v3i10"
+    ],
+    [
+     "v3i11",
+     "v3i12"
+    ],
+    [
+     "v3i26",
+     "v3i27"
+    ],
+    [
+     "v3i29",
+     "v3i30"
+    ],
+    [
+     "v3i31",
+     "v3i32"
+    ],
+    [
+     "v3i33",
+     "v3i34"
+    ],
+    [
+     "v3i37",
+     "v3i38"
+    ],
+    [
+     "v3i37",
+     "v3i39"
+    ],
+    [
+     "v3i37",
+     "v3i40"
+    ],
+    [
+     "v3i38",
+     "v3i39"
+    ],
+    [
+     "v3i38",
+     "v3i40"
+    ],
+    [
+     "v3i39",
+     "v3i40"
+    ],
+    [
+     "v3i41",
+     "v3i42"
+    ],
+    [
+     "v3i43",
+     "v3i44"
+    ],
+    [
+     "v3i43",
+     "v3i45"
+    ],
+    [
+     "v3i44",
+     "v3i45"
+    ],
+    [
+     "v3i51",
+     "v3i52"
+    ],
+    [
+     "v3i53",
+     "v3i54"
+    ],
+    [
+     "v3i55",
+     "v3i56"
+    ],
+    [
+     "v3i57",
+     "v3i58"
+    ],
+    [
+     "v3i59",
+     "v3i61"
+    ],
+    [
+     "v3i62",
+     "v3i63"
+    ],
+    [
+     "v3i64",
+     "v3i65"
+    ],
+    [
+     "v3i67",
+     "v3i68"
+    ]
+   ],
+   "distinct": [
+    [
+     "v3i06",
+     "v3i07"
+    ],
+    [
+     "v3i06",
+     "v3i08"
+    ],
+    [
+     "v3i07",
+     "v3i08"
+    ],
+    [
+     "v3i13",
+     "v3i14"
+    ],
+    [
+     "v3i15",
+     "v3i16"
+    ],
+    [
+     "v3i17",
+     "v3i18"
+    ],
+    [
+     "v3i19",
+     "v3i20"
+    ],
+    [
+     "v3i21",
+     "v3i22"
+    ],
+    [
+     "v3i23",
+     "v3i24"
+    ],
+    [
+     "v3i23",
+     "v3i25"
+    ],
+    [
+     "v3i24",
+     "v3i25"
+    ],
+    [
+     "v3i28",
+     "v3i26"
+    ],
+    [
+     "v3i28",
+     "v3i27"
+    ],
+    [
+     "v3i35",
+     "v3i36"
+    ],
+    [
+     "v3i41",
+     "v3i37"
+    ],
+    [
+     "v3i41",
+     "v3i38"
+    ],
+    [
+     "v3i41",
+     "v3i39"
+    ],
+    [
+     "v3i41",
+     "v3i40"
+    ],
+    [
+     "v3i42",
+     "v3i37"
+    ],
+    [
+     "v3i42",
+     "v3i38"
+    ],
+    [
+     "v3i42",
+     "v3i39"
+    ],
+    [
+     "v3i42",
+     "v3i40"
+    ],
+    [
+     "v3i46",
+     "v3i43"
+    ],
+    [
+     "v3i46",
+     "v3i44"
+    ],
+    [
+     "v3i46",
+     "v3i45"
+    ],
+    [
+     "v3i47",
+     "v3i48"
+    ],
+    [
+     "v3i49",
+     "v3i50"
+    ],
+    [
+     "v3i01",
+     "v3i49"
+    ],
+    [
+     "v3i60",
+     "v3i59"
+    ],
+    [
+     "v3i60",
+     "v3i61"
+    ],
+    [
+     "v3i66",
+     "v3i64"
+    ],
+    [
+     "v3i66",
+     "v3i65"
+    ],
+    [
+     "v3i69",
+     "v3i70"
+    ],
+    [
+     "v3i71",
+     "v3i72"
+    ]
+   ]
+  }
+ }
+}
