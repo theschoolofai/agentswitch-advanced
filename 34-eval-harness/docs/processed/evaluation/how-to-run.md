@@ -43,7 +43,8 @@ Local runs use **live shared data**, so only read-only tasks are allowed locally
   - run: `uv run --frozen --no-sync python -m eval_harness --suite suites/example --out results.json`, with no internet.
 - **What it provides.** It sets `AGENTSWITCH_*` and `OPENAI_*` itself and uses a throwaway copy of one system. It allows one run every 3 days.
 - **Before submitting,** do a local run first, every time.
-- **Not possible yet.** The file must sit at a repository root, so an official run waits on instructor question Q1 ([risks](../project/risks.md)).
+- **Where the file goes (instructor, 13 Nov).** Each seat puts its own `agentswitch-harness.toml` at the root of the fork it submits; `main` has none. The runner reads only that root file, so its commands start with `cd 34-eval-harness &&`.
+- **Several suites in one run.** The runner reads one `results.json`, and `eval_harness` runs one suite per call. `python -m eval_harness.run_all --suite suites/seat35 --suite suites/seat31 --out ../results.json` runs the suites in that order, each in its own process, and joins their rows into one file. A suite that leaves no results (for example it fails to load) becomes one infrastructure row, and the other suites still run.
 
 ## 4. Re-score without re-running
 ```bash
