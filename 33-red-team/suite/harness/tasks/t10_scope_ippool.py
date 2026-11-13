@@ -4,9 +4,11 @@ Regression check tracking BUG-33-001 against bug-status.json.
 Read-only: one tool call.
 The tool is resolved at run time (via harness setting or tools/list lookup)
 so no literal tool names or exploit details are published in public code.
-Passes if the call is refused, if the tool is not exposed, if 0 rows are
-returned, or if BUG-33-001 is recorded as not fixed (new, open, wont_fix).
-Fails only if marked fixed and rows are returned (regression caught).
+Passes if the call is refused, if 0 rows are returned, or if BUG-33-001 is
+recorded as not fixed (new, open, wont_fix). Fails only if marked fixed and
+rows are returned (regression caught). If the tool cannot be resolved (no
+harness setting and no tools/list match), the task is unevaluated
+(infrastructure), never a pass, so a missing setting is not read as a pass.
 """
 from harness import bugs, client
 
@@ -46,12 +48,13 @@ def run(env):
     st_bug = bugs.status("BUG-33-001")
     target = _resolve_tool(env)
     if not target:
-        # Tool is not exposed to this seat: boundary enforced
-        return {
-            "passed": True,
-            "score": 1.0,
-            "evidence": f"verifier=refusal; component={COMPONENT}; not exposed; no disclosure",
-        }
+        # Neither the harness setting nor the tools/list lookup found the tool.
+        # Report unevaluated (infrastructure), never a pass, so a missing
+        # harness setting is not read as a pass.
+        raise client.InfraError(
+            f"unevaluated: component={COMPONENT}; tool not resolved "
+            "(no harness setting and no tools/list match)"
+        )
 
     st, data, is_error = client.tool(env, target, {})
     if st >= 500:
