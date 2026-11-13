@@ -1,0 +1,15 @@
+# The root .gitignore drops .env.* , which would hide the example too.
+!.env.example
+
+# Login tokens, one file per instance
+.tokens/
+
+# Platform-derived output (tool lists, schemas, probe dumps): the repository is public
+local/
+
+# Run output
+runs/
+results.json
+
+# Local working folder, not committed
+how-duplicates-are-found/

@@ -1,0 +1,1155 @@
+{
+ "about": "Made-up tuning set for data_steward.dedupe. Every value is invented; nothing comes from a live record. The held-back set is written separately by the other person on the seat (plan step 4b).",
+ "test_tags": [
+  "acme-qa"
+ ],
+ "party": [
+  {
+   "id": "p01",
+   "name": "Rivera Hardware Supply",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "orders@riverahw.example",
+   "phone": "+1 (555) 201-3344"
+  },
+  {
+   "id": "p02",
+   "name": "rivera  hardware supply",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "Orders@RiveraHW.example",
+   "phone": "555.201.3344"
+  },
+  {
+   "id": "p03",
+   "name": "Bluepine Logistics Pvt Ltd",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5552019001",
+   "type": "organization"
+  },
+  {
+   "id": "p04",
+   "name": "Bluepine Logistics Private Limited",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "+1 555 201 9001",
+   "type": "organization"
+  },
+  {
+   "id": "p05",
+   "name": "Harbor Vew Bakery",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "hello@harborview.example"
+  },
+  {
+   "id": "p06",
+   "name": "Harbor View Bakery",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "hello@harborview.example"
+  },
+  {
+   "id": "p07",
+   "name": "Dana Whitcombe",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "family@whitcombe.example",
+   "type": "individual"
+  },
+  {
+   "id": "p08",
+   "name": "Theo Whitcombe",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "family@whitcombe.example",
+   "type": "individual"
+  },
+  {
+   "id": "p09",
+   "name": "Chen Wei",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "first_name": "Wei",
+   "last_name": "Chen",
+   "phone": "5552017788",
+   "type": "individual"
+  },
+  {
+   "id": "p10",
+   "name": "Wei Chen",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "first_name": "Wei",
+   "last_name": "Chen",
+   "phone": "555-201-7788",
+   "type": "individual"
+  },
+  {
+   "id": "p11",
+   "name": "[acme-qa run-3] Northgate Tooling Inc",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p12",
+   "name": "[acme-qa run-3] Northgate Textiles LLC",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p13",
+   "name": "[acme-qa run-1] Gristmill Foods Corp",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p14",
+   "name": "[acme-qa run-2] Gristmill Foods Corp",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p15",
+   "name": "[acme-qa run-4] Gristmill Foods Corp",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p16",
+   "name": "[North] Kestrel Outfitters",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p17",
+   "name": "[South] Kestrel Outfitters",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p18",
+   "name": "Olsen Plumbing",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "label": "billing",
+     "city": "Fairview",
+     "postal": "40211",
+     "state": "",
+     "country": ""
+    }
+   ]
+  },
+  {
+   "id": "p19",
+   "name": "Marlow Electric",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "label": "billing",
+     "city": "Fairview",
+     "postal": "40211",
+     "state": "",
+     "country": ""
+    }
+   ]
+  },
+  {
+   "id": "p20",
+   "name": "Tidewater Marine Supply",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "sales@tidewater.example"
+  },
+  {
+   "id": "p21",
+   "name": "Tidewater Marine Supply",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ],
+   "email": "sales@tidewater.example"
+  },
+  {
+   "id": "p22",
+   "name": "Jordan Pike",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5552014410",
+   "type": "individual"
+  },
+  {
+   "id": "p23",
+   "name": "Jordan Pike",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5552014410",
+   "type": "organization"
+  },
+  {
+   "id": "p24",
+   "name": "Lumen Studio",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "hi@lumen.example",
+   "allow_duplicate": true
+  },
+  {
+   "id": "p25",
+   "name": "Lumen Studio",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "hi@lumen.example"
+  },
+  {
+   "id": "p26",
+   "name": "Lena Ortiz",
+   "privacy_state": "restricted",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "lena@ortiz.example",
+   "type": "individual"
+  },
+  {
+   "id": "p27",
+   "name": "Lena Ortiz",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "lena@ortiz.example",
+   "type": "individual"
+  },
+  {
+   "id": "p28",
+   "name": "Ivy Lane Florist",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "000-000-0000"
+  },
+  {
+   "id": "p29",
+   "name": "Copper Kettle Cafe",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "0000000000"
+  },
+  {
+   "id": "p30",
+   "name": "Pinecrest Motors",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "N/A"
+  },
+  {
+   "id": "p31",
+   "name": "Saltmarsh Gallery",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "n/a"
+  },
+  {
+   "id": "p32",
+   "name": "Summit Ridge Dental",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "front@summitridge.example",
+   "phone": "5552016060"
+  },
+  {
+   "id": "p33",
+   "name": "Summit Ridge Dental",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "office@summitridge.example",
+   "phone": "5552016060"
+  },
+  {
+   "id": "p34",
+   "name": "Maria Lopez",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5552013001",
+   "type": "individual",
+   "addresses": [
+    {
+     "label": "billing",
+     "city": "Fairview",
+     "postal": "40211",
+     "state": "",
+     "country": ""
+    }
+   ]
+  },
+  {
+   "id": "p35",
+   "name": "Maria Lopez",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5552019902",
+   "type": "individual",
+   "addresses": [
+    {
+     "label": "billing",
+     "city": "Lakeside",
+     "postal": "40877",
+     "state": "",
+     "country": ""
+    }
+   ]
+  },
+  {
+   "id": "p36",
+   "name": "Fernhill Nursery",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [],
+   "email": "grow@fernhill.example"
+  },
+  {
+   "id": "p37",
+   "name": "Fernhill Nursery",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "grow@fernhill.example"
+  },
+  {
+   "id": "p38",
+   "name": "Quarry Lane Books",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "https://www.quarrylanebooks.example/"
+  },
+  {
+   "id": "p39",
+   "name": "Quarry Lane Books Ltd",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "quarrylanebooks.example"
+  },
+  {
+   "id": "p40",
+   "name": "Orchard Pay",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "ap@orchardpay.example"
+  },
+  {
+   "id": "p41",
+   "name": "Orchard Pay",
+   "privacy_state": "normal",
+   "company_id": "co-2",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "ap@orchardpay.example"
+  },
+  {
+   "id": "p42",
+   "name": "Brightwater Optics",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p43",
+   "name": "Brightwatr Optics",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "p44",
+   "name": "Halden & Roe Accountants",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "desk@haldenroe.example",
+   "addresses": [
+    {
+     "label": "billing",
+     "city": "Lakeside",
+     "postal": "40877",
+     "state": "",
+     "country": ""
+    }
+   ]
+  },
+  {
+   "id": "p45",
+   "name": "Halden and Roe Accountants",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "label": "billing",
+     "city": "Lakeside",
+     "postal": "40877",
+     "state": "",
+     "country": ""
+    }
+   ]
+  },
+  {
+   "id": "p46",
+   "name": "Greta Lind",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "greta.lind@mail.example",
+   "type": "individual"
+  },
+  {
+   "id": "p47",
+   "name": "Greta Lindgard",
+   "privacy_state": "normal",
+   "company_id": "co-1",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "greta.lindgard@mail.example",
+   "type": "individual"
+  }
+ ],
+ "item": [
+  {
+   "id": "i01",
+   "name": "Hex Bolt M8 x 40",
+   "code": "HB-M8-40",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i02",
+   "name": "hex bolt m8 x 40",
+   "code": "hb-m8-40",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i03",
+   "name": "Cold-Finished Steel Rod 12 mm",
+   "code": "RD-CD12",
+   "company_id": "co-1",
+   "uom": "lb",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i04",
+   "name": "Hot-Finished Steel Rod 12 mm",
+   "code": "RD-HD12",
+   "company_id": "co-1",
+   "uom": "lb",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i05",
+   "name": "Copper Wire 2.5mm",
+   "code": "CW-25",
+   "company_id": "co-1",
+   "uom": "m",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i06",
+   "name": "Copper Wire 2.5mm",
+   "code": "CW-25-KG",
+   "company_id": "co-1",
+   "uom": "kg",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i07",
+   "name": "Forklift Inspection",
+   "code": "SV-FLI",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services",
+   "variants": []
+  },
+  {
+   "id": "i08",
+   "name": "Forklift Inspection",
+   "code": "FLI-01",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i09",
+   "name": "Nitrile Gloves Large",
+   "code": "GL-NIT-L",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-ppe"
+  },
+  {
+   "id": "i10",
+   "name": "Nitrile Gloves - Large",
+   "code": "GLV-NL",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-ppe"
+  },
+  {
+   "id": "i11",
+   "name": "Safety Vest",
+   "code": "SV-100",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [
+    {
+     "sku": "SV-100-XL"
+    }
+   ],
+   "category_id": "cat-ppe"
+  },
+  {
+   "id": "i12",
+   "name": "Safety Vest",
+   "code": "SV-100-XL",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-ppe"
+  },
+  {
+   "id": "i13",
+   "name": "Wood Pallet 1200",
+   "code": "PL-220",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "sku": "PAL-220-W"
+  },
+  {
+   "id": "i14",
+   "name": "Wood Pallet 1200",
+   "code": "PAL-220-W",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i15",
+   "name": "Drill Bit Set",
+   "code": "DB-SET",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i16",
+   "name": "Drum Liner",
+   "code": "DR-LIN",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i17",
+   "name": "Shrink Wrap Roll 500",
+   "code": "SW-500",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-pack"
+  },
+  {
+   "id": "i18",
+   "name": "Shrink Wrap Rol 500",
+   "code": "SW-500-B",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-pack"
+  },
+  {
+   "id": "i19",
+   "name": "Copper Pipe 15mm",
+   "code": "CP-15",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-pipe"
+  },
+  {
+   "id": "i20",
+   "name": "Copper Pipe 15 mm",
+   "code": "CPP-015",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-pipe"
+  },
+  {
+   "id": "i21",
+   "name": "Copper Pipe 22mm",
+   "code": "CP-22",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-pipe"
+  },
+  {
+   "id": "i22",
+   "name": "Torvane Cable Tie Black",
+   "code": "TV-CTB",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-elec"
+  },
+  {
+   "id": "i23",
+   "name": "Cable Tie Black",
+   "code": "CT-BLK",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-elec"
+  },
+  {
+   "id": "i24",
+   "name": "Cable Tie Black Heavy",
+   "code": "CT-BLK-H",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-elec"
+  },
+  {
+   "id": "i25",
+   "name": "Cable Tie Black 300",
+   "code": "CT-BLK-300",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": [],
+   "category_id": "cat-elec"
+  },
+  {
+   "id": "i26",
+   "name": "Pallet Wrapping Service",
+   "code": "PWS-1",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  },
+  {
+   "id": "i27",
+   "name": "Pallet Wrapping Service",
+   "code": "SV-PALW",
+   "company_id": "co-1",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods",
+   "variants": []
+  }
+ ],
+ "labels": {
+  "party": {
+   "duplicates": [
+    [
+     "p01",
+     "p02"
+    ],
+    [
+     "p03",
+     "p04"
+    ],
+    [
+     "p05",
+     "p06"
+    ],
+    [
+     "p09",
+     "p10"
+    ],
+    [
+     "p13",
+     "p14"
+    ],
+    [
+     "p13",
+     "p15"
+    ],
+    [
+     "p14",
+     "p15"
+    ],
+    [
+     "p20",
+     "p21"
+    ],
+    [
+     "p32",
+     "p33"
+    ],
+    [
+     "p36",
+     "p37"
+    ],
+    [
+     "p38",
+     "p39"
+    ],
+    [
+     "p42",
+     "p43"
+    ],
+    [
+     "p44",
+     "p45"
+    ]
+   ],
+   "distinct": [
+    [
+     "p07",
+     "p08"
+    ],
+    [
+     "p11",
+     "p12"
+    ],
+    [
+     "p16",
+     "p17"
+    ],
+    [
+     "p18",
+     "p19"
+    ],
+    [
+     "p22",
+     "p23"
+    ],
+    [
+     "p24",
+     "p25"
+    ],
+    [
+     "p28",
+     "p29"
+    ],
+    [
+     "p30",
+     "p31"
+    ],
+    [
+     "p34",
+     "p35"
+    ],
+    [
+     "p40",
+     "p41"
+    ],
+    [
+     "p46",
+     "p47"
+    ],
+    [
+     "p34",
+     "p18"
+    ]
+   ]
+  },
+  "item": {
+   "duplicates": [
+    [
+     "i01",
+     "i02"
+    ],
+    [
+     "i09",
+     "i10"
+    ],
+    [
+     "i13",
+     "i14"
+    ],
+    [
+     "i17",
+     "i18"
+    ],
+    [
+     "i19",
+     "i20"
+    ],
+    [
+     "i26",
+     "i27"
+    ],
+    [
+     "i22",
+     "i23"
+    ]
+   ],
+   "distinct": [
+    [
+     "i03",
+     "i04"
+    ],
+    [
+     "i05",
+     "i06"
+    ],
+    [
+     "i07",
+     "i08"
+    ],
+    [
+     "i11",
+     "i12"
+    ],
+    [
+     "i15",
+     "i16"
+    ],
+    [
+     "i19",
+     "i21"
+    ],
+    [
+     "i20",
+     "i21"
+    ],
+    [
+     "i23",
+     "i24"
+    ],
+    [
+     "i23",
+     "i25"
+    ],
+    [
+     "i24",
+     "i25"
+    ],
+    [
+     "i22",
+     "i24"
+    ]
+   ]
+  }
+ }
+}
