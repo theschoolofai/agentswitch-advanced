@@ -1,0 +1,2312 @@
+{
+ "about": "Made-up held-back set for data_steward.dedupe, written by @Dheeraj-Hegde from the plan alone; every value is invented.",
+ "test_tags": [
+  "orbit-smoke",
+  "kiwi-e2e"
+ ],
+ "party": [
+  {
+   "id": "hp01",
+   "name": "Marigold Caterers",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "events@marigoldcater.test",
+   "phone": "(312) 555-0101",
+   "type": "organization"
+  },
+  {
+   "id": "hp02",
+   "name": "MARIGOLD  CATERERS",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "Events@MarigoldCater.test",
+   "phone": "312.555.0101",
+   "type": "organization"
+  },
+  {
+   "id": "hp03",
+   "name": "Ashgrove Joinery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "4155550102"
+  },
+  {
+   "id": "hp04",
+   "name": "Ashgrove Joinry",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "+1 415 555 0102"
+  },
+  {
+   "id": "hp05",
+   "name": "Velkora Ceramics",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Brenford",
+     "postal": "73104"
+    }
+   ]
+  },
+  {
+   "id": "hp06",
+   "name": "Velkora Ceramic",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Brenford",
+     "postal": "73104"
+    }
+   ]
+  },
+  {
+   "id": "hp07",
+   "name": "Prenzaro",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "hello@prenzaro.test"
+  },
+  {
+   "id": "hp08",
+   "name": "Prenzarro",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp09",
+   "name": "Talwar Fabrication Pvt. Ltd.",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "accounts@talwarfab.test",
+   "type": "organization"
+  },
+  {
+   "id": "hp10",
+   "name": "Talwar Fabrication Private Limited",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "accounts@talwarfab.test",
+   "type": "organization"
+  },
+  {
+   "id": "hp11",
+   "name": "Corvane Analytics Corporation",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "https://corvane.test"
+  },
+  {
+   "id": "hp12",
+   "name": "Corvane Analytics Corp.",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "website": "www.corvane.test/"
+  },
+  {
+   "id": "hp13",
+   "name": "Norvik Holdings LLC",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "ir@norvik-us.test",
+   "type": "organization"
+  },
+  {
+   "id": "hp14",
+   "name": "Norvik Holdings GmbH",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "info@norvik-de.test",
+   "type": "organization"
+  },
+  {
+   "id": "hp15",
+   "name": "Deepa Raghunathan",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "+91 (80) 555-0117",
+   "type": "individual"
+  },
+  {
+   "id": "hp16",
+   "name": "Deepa Raghunathan",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "080-555-0117",
+   "type": "individual"
+  },
+  {
+   "id": "hp17",
+   "name": "Ostara Dental Lab",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "555-0121"
+  },
+  {
+   "id": "hp18",
+   "name": "Ostara Dental Laboratory",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "555 0121"
+  },
+  {
+   "id": "hp19",
+   "name": "Pebblebrook Interiors",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "studio@pebblebrook.test"
+  },
+  {
+   "id": "hp20",
+   "name": "PB Interiors Studio",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "studio@pebblebrook.test"
+  },
+  {
+   "id": "hp21",
+   "name": "Farhan Qureshi",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "qureshi.home@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "hp22",
+   "name": "Samina Qureshi",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "qureshi.home@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "hp23",
+   "name": "Lindqvist Bakery",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "books@ledgerly.test"
+  },
+  {
+   "id": "hp24",
+   "name": "Ferro Auto Spares",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "books@ledgerly.test"
+  },
+  {
+   "id": "hp25",
+   "name": "Ninefold Yoga",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "books@ledgerly.test"
+  },
+  {
+   "id": "hp26",
+   "name": "Arjun Mehra",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "mehra.family@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "hp27",
+   "name": "Arjan Mehra",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "mehra.family@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "hp28",
+   "name": "Soraya Bennet",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "soraya.b@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "hp29",
+   "name": "Soraya Bennett",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "soraya.b@mailbox.test",
+   "type": "individual"
+  },
+  {
+   "id": "hp30",
+   "name": "Kohli Traders",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5125550136"
+  },
+  {
+   "id": "hp31",
+   "name": "Kohl Traders",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "5125550137"
+  },
+  {
+   "id": "hp32",
+   "name": "[Pune] Orchid Footwear",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "ORF-PUN"
+  },
+  {
+   "id": "hp33",
+   "name": "[Nagpur] Orchid Footwear",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "ORF-NAG"
+  },
+  {
+   "id": "hp34",
+   "name": "[OLD] Hollins Garage",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "2065550142"
+  },
+  {
+   "id": "hp35",
+   "name": "Hollins Garage",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "206-555-0142"
+  },
+  {
+   "id": "hp36",
+   "name": "Tarn Bicycle Works",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Millbridge",
+     "postal": "58302"
+    }
+   ]
+  },
+  {
+   "id": "hp37",
+   "name": "Ember Tattoo Parlour",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Millbridge",
+     "postal": "58302"
+    }
+   ]
+  },
+  {
+   "id": "hp38",
+   "name": "Halvorsen Legal",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Millbridge",
+     "postal": "58302"
+    }
+   ]
+  },
+  {
+   "id": "hp39",
+   "name": "Rohan Pillai",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ravensholm",
+     "postal": "68219"
+    }
+   ],
+   "phone": "4045550147",
+   "type": "individual"
+  },
+  {
+   "id": "hp40",
+   "name": "Rohan Pillai",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ravensholm",
+     "postal": "68219"
+    }
+   ],
+   "phone": "4045550148",
+   "type": "individual"
+  },
+  {
+   "id": "hp41",
+   "name": "Kavya Handlooms",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ravensholm",
+     "postal": "68219"
+    }
+   ]
+  },
+  {
+   "id": "hp42",
+   "name": "Kavya Handlooms",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Ravensholm",
+     "postal": "68219"
+    }
+   ]
+  },
+  {
+   "id": "hp43",
+   "name": "Thornbury Packaging",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "ops@thornbury.test"
+  },
+  {
+   "id": "hp44",
+   "name": "Thornbury Packaging",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ],
+   "email": "ops@thornbury.test"
+  },
+  {
+   "id": "hp45",
+   "name": "Ines Calloway",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "employee",
+     "active": true
+    }
+   ],
+   "phone": "5035550153",
+   "type": "individual"
+  },
+  {
+   "id": "hp46",
+   "name": "Ines Calloway",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "503 555 0153",
+   "type": "individual"
+  },
+  {
+   "id": "hp47",
+   "name": "Pemberton Seeds",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "email": "hi@pembertonseeds.test"
+  },
+  {
+   "id": "hp48",
+   "name": "Pemberton Seeds Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ],
+   "email": "hi@pembertonseeds.test"
+  },
+  {
+   "id": "hp49",
+   "name": "Galloway Freight",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "CUST-7731"
+  },
+  {
+   "id": "hp50",
+   "name": "Gallowy Freight",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "CUST-7731"
+  },
+  {
+   "id": "hp51",
+   "name": "Iverson Ranch Supply",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "IRS-01",
+   "email": "buy@iversonranch.test"
+  },
+  {
+   "id": "hp52",
+   "name": "Iverson Ranch Supply",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "IRS-1001",
+   "email": "buy@iversonranch.test"
+  },
+  {
+   "id": "hp53",
+   "name": "Brookfield Pharmacy",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "TBD"
+  },
+  {
+   "id": "hp54",
+   "name": "Lantern Toys",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "TBD"
+  },
+  {
+   "id": "hp55",
+   "name": "Osprey Signs",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "customer_code": "TBD"
+  },
+  {
+   "id": "hp56",
+   "name": "Willowmere Spa",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "000-555-0100"
+  },
+  {
+   "id": "hp57",
+   "name": "Rook & Pawn Games",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "0005550100"
+  },
+  {
+   "id": "hp58",
+   "name": "Juniper Hollow Farm",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "000 555 0100",
+   "email": "noemail@placeholder.test"
+  },
+  {
+   "id": "hp59",
+   "name": "Ridgeback Security",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "noemail@placeholder.test"
+  },
+  {
+   "id": "hp60",
+   "name": "Fairlight Opticians",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "eyes@fairlight.test",
+   "allow_duplicate": true
+  },
+  {
+   "id": "hp61",
+   "name": "Fairlight Opticians",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "eyes@fairlight.test"
+  },
+  {
+   "id": "hp62",
+   "name": "Noor Siddiqui",
+   "privacy_state": "anonymized",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "6145550174",
+   "type": "individual"
+  },
+  {
+   "id": "hp63",
+   "name": "Noor Siddiqui",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "614-555-0174",
+   "type": "individual"
+  },
+  {
+   "id": "hp64",
+   "name": "Halcyon Print House",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "jobs@halcyonprint.test"
+  },
+  {
+   "id": "hp65",
+   "name": "Halcyon Print House",
+   "privacy_state": "normal",
+   "company_id": "cmp-20",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "jobs@halcyonprint.test"
+  },
+  {
+   "id": "hp66",
+   "name": "Priya Venkatesh",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "4155550180",
+   "type": "individual"
+  },
+  {
+   "id": "hp67",
+   "name": "Priya Venkatesh",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "4155550180",
+   "type": "organization"
+  },
+  {
+   "id": "hp68",
+   "name": "Corrigan Timber",
+   "privacy_state": "normal",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "2125550178"
+  },
+  {
+   "id": "hp69",
+   "name": "Corrigan Timber",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "212-555-0178"
+  },
+  {
+   "id": "hp70",
+   "name": "[orbit-smoke run-11] Zephyr Lamps Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp71",
+   "name": "[orbit-smoke run-12] Zephyr Lamps Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp72",
+   "name": "[orbit-smoke run-14] Zephyr Lamps Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp73",
+   "name": "[orbit-smoke run-16] Zephyr Lamps Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp74",
+   "name": "[ORBIT-SMOKE run-17] Zephyr Lamps Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp75",
+   "name": "[orbit-smoke run-11] Zephyr Rugs Ltd",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp76",
+   "name": "[kiwi-e2e batch 3] Vendor Alpha",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp77",
+   "name": "[kiwi-e2e batch 4] Vendor Alpha",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp78",
+   "name": "[kiwi-e2e batch 3] Vendor Beta",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "supplier",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp79",
+   "name": "Velora Paints",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "email": "orders@velorapaints.test",
+   "phone": "3125550192"
+  },
+  {
+   "id": "hp80",
+   "name": "[orbit-smoke run-12] Velora Paints",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ]
+  },
+  {
+   "id": "hp81",
+   "name": "R. K. Bhatt",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "6175550196",
+   "type": "individual"
+  },
+  {
+   "id": "hp82",
+   "name": "Rajesh Kumar Bhatt",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "phone": "(617) 555-0196",
+   "type": "individual"
+  },
+  {
+   "id": "hp83",
+   "name": "Café Solène",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Dunmore",
+     "postal": "30517"
+    }
+   ]
+  },
+  {
+   "id": "hp84",
+   "name": "Cafe Solene",
+   "privacy_state": "normal",
+   "company_id": "cmp-10",
+   "roles": [
+    {
+     "role": "customer",
+     "active": true
+    }
+   ],
+   "addresses": [
+    {
+     "city": "Dunmore",
+     "postal": "30517"
+    }
+   ]
+  }
+ ],
+ "item": [
+  {
+   "id": "hi01",
+   "name": "Brass Ball Valve 1/2 in",
+   "code": "BV-050",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-BR-050",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "hi02",
+   "name": "brass ball valve  1/2 in",
+   "code": "bv-050",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "hi03",
+   "name": "Ball Valve, Brass, Half Inch",
+   "code": "BALLV-H",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-BR-050",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "hi04",
+   "name": "PVC Elbow 25mm",
+   "code": "PE-25",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "hi05",
+   "name": "PVC Elbow 25 mm",
+   "code": "PE25",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "hi06",
+   "name": "Cable Tie 200mm Black",
+   "code": "CT-200-BK",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi07",
+   "name": "Cable Tie 250mm Black",
+   "code": "CT-250-BK",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi08",
+   "name": "Cable Tie 200mm White",
+   "code": "CT-200-WH",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi09",
+   "name": "LED Panel Light 18W",
+   "code": "LP-18",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi10",
+   "name": "Voltrix LED Panel Light 18W",
+   "code": "VX-LP18",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi11",
+   "name": "Wall Plug 6mm",
+   "code": "WP-6",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "hi12",
+   "name": "Wall Plug 6mm",
+   "code": "RAWL-6",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi13",
+   "name": "Masking Tape 24mm",
+   "code": "MT-24",
+   "company_id": "cmp-10",
+   "uom": "roll",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi14",
+   "name": "Masking Tape 24mm",
+   "code": "MT-24-BX",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi15",
+   "name": "Machine Calibration Visit",
+   "code": "SVC-CAL",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services"
+  },
+  {
+   "id": "hi16",
+   "name": "Machine Calibration Visit",
+   "code": "CAL-KIT",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi17",
+   "name": "Work Boot Steel Toe",
+   "code": "WB-ST",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-workwear",
+   "variants": [
+    {
+     "sku": "WB-ST-42"
+    },
+    {
+     "sku": "WB-ST-44"
+    }
+   ]
+  },
+  {
+   "id": "hi18",
+   "name": "Work Boot Steel Toe",
+   "code": "WB-ST-42",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-workwear"
+  },
+  {
+   "id": "hi19",
+   "name": "Basmati Rice 5kg",
+   "code": "RICE-B5",
+   "company_id": "cmp-10",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "hi20",
+   "name": "Basmati Rice 5kg",
+   "code": "RICE-B5",
+   "company_id": "cmp-20",
+   "uom": "bag",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "hi21",
+   "name": "Kraft Envelope A4",
+   "code": "ENV-01",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi22",
+   "name": "Bubble Mailer A5",
+   "code": "ENV-01",
+   "company_id": "cmp-10",
+   "uom": "pack",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi23",
+   "name": "Copy Paper A4 80gsm",
+   "code": "CP-A4-80",
+   "company_id": "cmp-10",
+   "uom": "ream",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "0000",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi24",
+   "name": "Whiteboard Marker Blue",
+   "code": "WBM-BL",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "0000",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi25",
+   "name": "Stapler Heavy Duty",
+   "code": "STP-HD",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "0000",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi26",
+   "name": "Exterior Emulsion White 4L",
+   "code": "EXT-W4",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "PNT-EW-4",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi27",
+   "name": "Exterior Emulsion White 4 L",
+   "code": "EXTW4",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "pnt-ew-4",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi28",
+   "name": "Exterior Emulsion White 10L",
+   "code": "EXT-W10",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "PNT-EW-10",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi29",
+   "name": "Primer Sealer 1L",
+   "code": "PS-1",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi30",
+   "name": "Primer Sealr 1L",
+   "code": "PS-01",
+   "company_id": "cmp-10",
+   "uom": "can",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-paint"
+  },
+  {
+   "id": "hi31",
+   "name": "Stainless Steel Wood Screw 4x30",
+   "code": "SSW-430",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "hi32",
+   "name": "SS Wood Screw 4x30",
+   "code": "SWS-4-30",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "hi33",
+   "name": "Hinge 75mm Satin",
+   "code": "HG-75-S",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "hi34",
+   "name": "Hinge 75 mm Satin",
+   "code": "HG75S",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-fasten"
+  },
+  {
+   "id": "hi35",
+   "name": "Olive Oil 1L Tin",
+   "code": "OIL-OL1",
+   "uom": "tin",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "hi36",
+   "name": "Olive Oil 1L Tin",
+   "code": "OIL-OL1",
+   "company_id": "cmp-10",
+   "uom": "tin",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "hi37",
+   "name": "Green Tea 100 Bags",
+   "code": "TEA-GR100",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "hi38",
+   "name": "Green Tea 25 Bags",
+   "code": "TEA-GR25",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-food"
+  },
+  {
+   "id": "hi39",
+   "name": "[orbit-smoke run-11] Sample Widget",
+   "code": "QA-SW-11",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi40",
+   "name": "[orbit-smoke run-12] Sample Widget",
+   "code": "QA-SW-12",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi41",
+   "name": "[orbit-smoke run-14] Sample Widget",
+   "code": "QA-SW-14",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi42",
+   "name": "[orbit-smoke run-16] Sample Widget",
+   "code": "QA-SW-16",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi43",
+   "name": "[orbit-smoke run-11] Sample Gadget",
+   "code": "QA-SG-11",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi44",
+   "name": "[orbit-smoke run-12] Sample Gadget",
+   "code": "QA-SG-12",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi45",
+   "name": "[kiwi-e2e batch 4] Test Item 7",
+   "code": "KE-7-B4",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi46",
+   "name": "[kiwi-e2e batch 5] Test Item 7",
+   "code": "KE-7-B5",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi47",
+   "name": "[kiwi-e2e batch 6] Test Item 7",
+   "code": "KE-7-B6",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi48",
+   "name": "[kiwi-e2e batch 4] Test Item 8",
+   "code": "KE-8-B4",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods"
+  },
+  {
+   "id": "hi49",
+   "name": "Garden Hose 15m",
+   "code": "GH-15",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-garden"
+  },
+  {
+   "id": "hi50",
+   "name": "Garden Hose 15m",
+   "code": "GH-15-M",
+   "company_id": "cmp-10",
+   "uom": "m",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-garden"
+  },
+  {
+   "id": "hi51",
+   "name": "Gate Valve 1 in",
+   "code": "GV-100",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-GT-100",
+   "category_id": "grp-plumb",
+   "variants": [
+    {
+     "sku": "VLV-GT-100-PN16"
+    },
+    {
+     "sku": "VLV-GT-100-PN25"
+    }
+   ]
+  },
+  {
+   "id": "hi52",
+   "name": "Gate Valve 1 in PN16",
+   "code": "GV-100-16",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "VLV-GT-100-PN16",
+   "category_id": "grp-plumb"
+  },
+  {
+   "id": "hi53",
+   "name": "Ceramic Floor Tile 600x600 Grey",
+   "code": "TL-6060-GR",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "hi54",
+   "name": "Floor Tile Grey 60x60 Ceramic",
+   "code": "CFT-GRY",
+   "company_id": "cmp-10",
+   "uom": "box",
+   "type": "product",
+   "product_type": "goods",
+   "sku": "TL-6060-GR",
+   "category_id": "grp-tile"
+  },
+  {
+   "id": "hi55",
+   "name": "Extension Cord 5m",
+   "code": "EC-5",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi56",
+   "name": "Extension Cord 5m",
+   "code": "ec 5",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-elec"
+  },
+  {
+   "id": "hi57",
+   "name": "Desk Lamp Arm",
+   "code": "DL-A1",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi58",
+   "name": "Desk Lamp Arm",
+   "code": "DLA-1",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-office"
+  },
+  {
+   "id": "hi59",
+   "name": "Delivery Charge - Local",
+   "code": "DLV-L",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services"
+  },
+  {
+   "id": "hi60",
+   "name": "Delivery Charge Local",
+   "code": "DLV-LOC",
+   "company_id": "cmp-10",
+   "uom": "ea",
+   "type": "service",
+   "product_type": "services"
+  },
+  {
+   "id": "hi61",
+   "name": "Pipe Wrench 14in",
+   "code": "PW-14",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tools"
+  },
+  {
+   "id": "hi62",
+   "name": "Pipe Wrench 18in",
+   "code": "PW-18",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tools"
+  },
+  {
+   "id": "hi63",
+   "name": "Pipe Wrench 14 inch",
+   "code": "PW14",
+   "company_id": "cmp-10",
+   "uom": "pc",
+   "type": "product",
+   "product_type": "goods",
+   "category_id": "grp-tools"
+  }
+ ],
+ "labels": {
+  "party": {
+   "duplicates": [
+    [
+     "hp01",
+     "hp02"
+    ],
+    [
+     "hp03",
+     "hp04"
+    ],
+    [
+     "hp05",
+     "hp06"
+    ],
+    [
+     "hp07",
+     "hp08"
+    ],
+    [
+     "hp09",
+     "hp10"
+    ],
+    [
+     "hp11",
+     "hp12"
+    ],
+    [
+     "hp15",
+     "hp16"
+    ],
+    [
+     "hp17",
+     "hp18"
+    ],
+    [
+     "hp19",
+     "hp20"
+    ],
+    [
+     "hp28",
+     "hp29"
+    ],
+    [
+     "hp34",
+     "hp35"
+    ],
+    [
+     "hp41",
+     "hp42"
+    ],
+    [
+     "hp43",
+     "hp44"
+    ],
+    [
+     "hp45",
+     "hp46"
+    ],
+    [
+     "hp47",
+     "hp48"
+    ],
+    [
+     "hp49",
+     "hp50"
+    ],
+    [
+     "hp51",
+     "hp52"
+    ],
+    [
+     "hp68",
+     "hp69"
+    ],
+    [
+     "hp70",
+     "hp71"
+    ],
+    [
+     "hp70",
+     "hp72"
+    ],
+    [
+     "hp70",
+     "hp73"
+    ],
+    [
+     "hp70",
+     "hp74"
+    ],
+    [
+     "hp71",
+     "hp72"
+    ],
+    [
+     "hp71",
+     "hp73"
+    ],
+    [
+     "hp71",
+     "hp74"
+    ],
+    [
+     "hp72",
+     "hp73"
+    ],
+    [
+     "hp72",
+     "hp74"
+    ],
+    [
+     "hp73",
+     "hp74"
+    ],
+    [
+     "hp76",
+     "hp77"
+    ],
+    [
+     "hp81",
+     "hp82"
+    ],
+    [
+     "hp83",
+     "hp84"
+    ]
+   ],
+   "distinct": [
+    [
+     "hp13",
+     "hp14"
+    ],
+    [
+     "hp21",
+     "hp22"
+    ],
+    [
+     "hp23",
+     "hp24"
+    ],
+    [
+     "hp23",
+     "hp25"
+    ],
+    [
+     "hp24",
+     "hp25"
+    ],
+    [
+     "hp26",
+     "hp27"
+    ],
+    [
+     "hp30",
+     "hp31"
+    ],
+    [
+     "hp32",
+     "hp33"
+    ],
+    [
+     "hp36",
+     "hp37"
+    ],
+    [
+     "hp36",
+     "hp38"
+    ],
+    [
+     "hp37",
+     "hp38"
+    ],
+    [
+     "hp39",
+     "hp40"
+    ],
+    [
+     "hp39",
+     "hp41"
+    ],
+    [
+     "hp39",
+     "hp42"
+    ],
+    [
+     "hp40",
+     "hp41"
+    ],
+    [
+     "hp40",
+     "hp42"
+    ],
+    [
+     "hp53",
+     "hp54"
+    ],
+    [
+     "hp53",
+     "hp55"
+    ],
+    [
+     "hp54",
+     "hp55"
+    ],
+    [
+     "hp56",
+     "hp57"
+    ],
+    [
+     "hp56",
+     "hp58"
+    ],
+    [
+     "hp57",
+     "hp58"
+    ],
+    [
+     "hp58",
+     "hp59"
+    ],
+    [
+     "hp60",
+     "hp61"
+    ],
+    [
+     "hp64",
+     "hp65"
+    ],
+    [
+     "hp66",
+     "hp67"
+    ],
+    [
+     "hp75",
+     "hp70"
+    ],
+    [
+     "hp75",
+     "hp71"
+    ],
+    [
+     "hp75",
+     "hp72"
+    ],
+    [
+     "hp75",
+     "hp73"
+    ],
+    [
+     "hp75",
+     "hp74"
+    ],
+    [
+     "hp78",
+     "hp76"
+    ],
+    [
+     "hp78",
+     "hp77"
+    ],
+    [
+     "hp79",
+     "hp80"
+    ]
+   ]
+  },
+  "item": {
+   "duplicates": [
+    [
+     "hi01",
+     "hi02"
+    ],
+    [
+     "hi01",
+     "hi03"
+    ],
+    [
+     "hi02",
+     "hi03"
+    ],
+    [
+     "hi04",
+     "hi05"
+    ],
+    [
+     "hi09",
+     "hi10"
+    ],
+    [
+     "hi11",
+     "hi12"
+    ],
+    [
+     "hi26",
+     "hi27"
+    ],
+    [
+     "hi29",
+     "hi30"
+    ],
+    [
+     "hi31",
+     "hi32"
+    ],
+    [
+     "hi33",
+     "hi34"
+    ],
+    [
+     "hi35",
+     "hi36"
+    ],
+    [
+     "hi39",
+     "hi40"
+    ],
+    [
+     "hi39",
+     "hi41"
+    ],
+    [
+     "hi39",
+     "hi42"
+    ],
+    [
+     "hi40",
+     "hi41"
+    ],
+    [
+     "hi40",
+     "hi42"
+    ],
+    [
+     "hi41",
+     "hi42"
+    ],
+    [
+     "hi43",
+     "hi44"
+    ],
+    [
+     "hi45",
+     "hi46"
+    ],
+    [
+     "hi45",
+     "hi47"
+    ],
+    [
+     "hi46",
+     "hi47"
+    ],
+    [
+     "hi53",
+     "hi54"
+    ],
+    [
+     "hi55",
+     "hi56"
+    ],
+    [
+     "hi57",
+     "hi58"
+    ],
+    [
+     "hi59",
+     "hi60"
+    ],
+    [
+     "hi61",
+     "hi63"
+    ]
+   ],
+   "distinct": [
+    [
+     "hi06",
+     "hi07"
+    ],
+    [
+     "hi06",
+     "hi08"
+    ],
+    [
+     "hi07",
+     "hi08"
+    ],
+    [
+     "hi13",
+     "hi14"
+    ],
+    [
+     "hi15",
+     "hi16"
+    ],
+    [
+     "hi17",
+     "hi18"
+    ],
+    [
+     "hi19",
+     "hi20"
+    ],
+    [
+     "hi21",
+     "hi22"
+    ],
+    [
+     "hi23",
+     "hi24"
+    ],
+    [
+     "hi23",
+     "hi25"
+    ],
+    [
+     "hi24",
+     "hi25"
+    ],
+    [
+     "hi28",
+     "hi26"
+    ],
+    [
+     "hi28",
+     "hi27"
+    ],
+    [
+     "hi37",
+     "hi38"
+    ],
+    [
+     "hi43",
+     "hi39"
+    ],
+    [
+     "hi43",
+     "hi40"
+    ],
+    [
+     "hi43",
+     "hi41"
+    ],
+    [
+     "hi43",
+     "hi42"
+    ],
+    [
+     "hi44",
+     "hi39"
+    ],
+    [
+     "hi44",
+     "hi40"
+    ],
+    [
+     "hi44",
+     "hi41"
+    ],
+    [
+     "hi44",
+     "hi42"
+    ],
+    [
+     "hi48",
+     "hi45"
+    ],
+    [
+     "hi48",
+     "hi46"
+    ],
+    [
+     "hi48",
+     "hi47"
+    ],
+    [
+     "hi49",
+     "hi50"
+    ],
+    [
+     "hi51",
+     "hi52"
+    ],
+    [
+     "hi01",
+     "hi51"
+    ],
+    [
+     "hi62",
+     "hi61"
+    ],
+    [
+     "hi62",
+     "hi63"
+    ]
+   ]
+  }
+ }
+}
