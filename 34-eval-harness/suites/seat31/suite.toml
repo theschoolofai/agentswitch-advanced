@@ -1,7 +1,7 @@
 [suite]
 name = "seat31"
 graded = true
-agent = "TODO: seat 31 command, once it accepts --prompt"
+agent = "env PYTHONPATH=../31-order-to-cash-watcher python -m o2c"
 task_minutes = 5
 corrections = []
 
