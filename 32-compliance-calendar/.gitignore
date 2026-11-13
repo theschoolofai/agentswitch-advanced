@@ -1,0 +1,7 @@
+# Never commit credentials or platform data.
+.env
+*.env
+calendar*.md
+out/
+__pycache__/
+*.pyc
