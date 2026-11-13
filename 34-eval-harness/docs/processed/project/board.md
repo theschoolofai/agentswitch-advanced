@@ -4,7 +4,7 @@
 
 **Owners marked "(proposed)" are only suggestions.** Nothing has been agreed yet. The team will settle them together at the first meeting, and then the "(proposed)" labels come off.
 
-Card format: `S34-NN | title | owner | milestone`. A card on this board already has its number. A new card takes the next free number (**S34-35** at the moment), claimed in the title of the pull request that adds it. Never reuse a number.
+Card format: `S34-NN | title | owner | milestone`. A card on this board already has its number. A new card takes the next free number (**S34-36** at the moment), claimed in the title of the pull request that adds it. Never reuse a number.
 
 **Never delete a card, for traceability.** Every number from S34-01 up to the last one claimed stays on this board, exactly once. A card only moves between sections. A finished card goes to Done. A card merged into another, or no longer needed, goes to Done or Dropped with a one-line note saying why and which card took it over. To change a card, update its line in place; git history keeps the old wording.
 
@@ -44,6 +44,7 @@ Card format: `S34-NN | title | owner | milestone`. A card on this board already 
 - S34-03 | Send instructor questions Q1–Q6; agree with seats 31 and 35 where their results land on the platform | Krishna | M0
 
 ## Review
+- S34-35 | 15 Nov run script: `python -m eval_harness.run_all` runs several suites (seat 35, then seat 31) and writes one `results.json`; the root `agentswitch-harness.toml` lives only in the fork we submit from (instructor, 13 Nov). Local dry run with a stand-in agent: 12/12 on Suryodaya and Keystone | Abhinav | M1
 - S34-19 | Eval-harness scaffold + plumbing task, run end to end on both systems (covers S34-04/05/06/09). In PR #21; the instructor's 10 Nov review changes are done (harness mode uses only the given token and URLs; run-path tests). Abhinav's review (10 Nov) answered on 11 Nov: the time limit now stops the agent's whole process group, and records are scrubbed before scoring; the allowlist was already done; paging moved to S34-34. Waiting for re-review | Krishna | M1
 - S34-04 | Platform client: read-only guard, login check, time limits, secret scrubbing (mcp SDK + httpx2) (built inside S34-19, as a GET-only REST reader; see decision 0009) | Krishna | M1
 - S34-05 | Run record and scorer writing `results.json` (atomic, infrastructure rows) (built inside S34-19) | Krishna | M1
