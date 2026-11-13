@@ -98,36 +98,79 @@ def is_my_task(task: dict, me: dict) -> bool:
 
 
 def _calendars(client) -> tuple[list[dict], bool]:
+    # Each platform call costs ~2 s, and the zone, the meetings and the free-time search all need the same calendar
+    # list, so a successful read is kept on the client for the rest of the run. Failures are not kept.
+    cached = getattr(client, "_ea_calendars", None)
+    if isinstance(cached, tuple):
+        return cached
     res = list_capped(client, "Calendar.list", {}, cap=CALENDAR_CAP)
-    return res["rows"], res["truncated"]
+    result = (res["rows"], res["truncated"])
+    try:
+        client._ea_calendars = result
+    except AttributeError:
+        pass
+    return result
 
 
 # ---- time zone and day window ----------------------------------------------------------------------------------
 
 TZ_LOOKUP_FAILED = "time zone lookup failed; times shown in UTC"
+# Most events on these systems carry no zone of their own (suryodaya: 496 of 594), so UTC would be a wrong default.
+SYSTEM_ZONES = {"suryodaya": "Asia/Kolkata", "keystone": "America/New_York"}
+TZ_SOURCES = ("explicit", "calendar", "system default", "utc fallback")
 
 
-def resolve_tz(client, me, tz_name: str | None) -> ZoneInfo:
-    """A failed lookup falls back to UTC and is recorded as `client.tz_note`, which build_briefing shows."""
+def _set(client, name: str, value) -> None:
+    try:
+        setattr(client, name, value)
+    except AttributeError:
+        pass
+
+
+def _set_source(client, source: str) -> None:
+    if source not in TZ_SOURCES:
+        raise ValueError(f"unknown time zone source {source!r}")
+    _set(client, "tz_source", source)
+
+
+def _system_zone(system: str | None) -> ZoneInfo | None:
+    name = SYSTEM_ZONES.get(str(system or "").strip().lower())
+    return ZoneInfo(name) if name else None
+
+
+def resolve_tz(client, me, tz_name: str | None, system: str | None = None) -> ZoneInfo:
+    """--tz > the user's own personal calendar zone > the system's default zone > UTC (unknown system only).
+    Where the zone came from goes to `client.tz_source`; a failed calendar lookup is recorded as `client.tz_note`,
+    which build_briefing shows as a warning."""
     if tz_name:
-        return ZoneInfo(tz_name)
+        tz = ZoneInfo(tz_name)
+        _set_source(client, "explicit")
+        return tz
+    fallback = _system_zone(system)
     try:
         cals, _ = _calendars(client)
     except Exception as exc:  # a bad reply only costs us the calendar's zone, not the run
-        print(f"note: could not read calendars for the time zone ({type(exc).__name__}); using UTC", file=sys.stderr)
-        try:
-            client.tz_note = TZ_LOOKUP_FAILED
-        except AttributeError:
-            pass
-        return ZoneInfo("UTC")
+        zone = fallback or ZoneInfo("UTC")
+        _set_source(client, "system default" if fallback else "utc fallback")
+        _set(client, "tz_note", f"time zone lookup failed; times shown in {zone.key}" if fallback else TZ_LOOKUP_FAILED)
+        print(f"note: could not read calendars for the time zone ({type(exc).__name__}); using {zone.key}",
+              file=sys.stderr)
+        return zone
     mine = [c for c in cals if c.get("type") == "personal" and is_my_calendar(c, me) and c.get("timezone")]
     mine.sort(key=lambda c: c.get("created_by") != me.get("id"))
     for cal in mine:
         try:
-            return ZoneInfo(str(cal["timezone"]))
+            tz = ZoneInfo(str(cal["timezone"]))
         except (ZoneInfoNotFoundError, ValueError):
             continue
-    print("note: no time zone given and no personal calendar time zone found; using UTC", file=sys.stderr)
+        _set_source(client, "calendar")
+        return tz
+    if fallback:
+        _set_source(client, "system default")
+        return fallback
+    _set_source(client, "utc fallback")
+    print("note: no time zone given, no personal calendar time zone and no default for this system; using UTC",
+          file=sys.stderr)
     return ZoneInfo("UTC")
 
 
@@ -221,6 +264,7 @@ def _meeting_item(event: dict, cal_names: dict, tz: ZoneInfo, recurring: bool, e
         "calendar": cal_names.get(event.get("calendar_id")),
         "recurring": recurring,
         "expanded": expanded,
+        "_event": event,
     }
 
 
@@ -244,65 +288,161 @@ def _sort_key(item: dict, tz: ZoneInfo):
     return (utc, str(item.get("title") or ""))
 
 
+MY_STATUSES = ("accepted", "needs_action", "declined", "tentative")
+
+
+def my_addresses(me: dict) -> set[str]:
+    out = {_lower(me.get("email"))}
+    out |= {_lower(a) for a in rrule.as_list(me.get("addresses")) if isinstance(a, str)}
+    out.discard("")
+    return out
+
+
+def my_status(event: dict, addresses: set[str]) -> str | None:
+    for a in rrule.as_list(event.get("attendees")):
+        if not isinstance(a, dict) or _lower(a.get("email")) not in addresses:
+            continue
+        status = _lower(a.get("status")).replace("-", "_").replace(" ", "_")
+        if status in MY_STATUSES:
+            return status
+    return None
+
+
+def _span_utc(item: dict) -> tuple[datetime, datetime] | None:
+    start = _aware(item.get("start_at"), timezone.utc)
+    end = _aware(item.get("end_at"), timezone.utc) or start
+    if start is None:
+        return None
+    return start.astimezone(timezone.utc), max(end, start).astimezone(timezone.utc)
+
+
+def _clash_candidate(item: dict) -> bool:
+    # An unexpanded recurring item still carries its first start date, so its time today is unknown.
+    return not item["declined"] and not item["all_day"] and not (item["recurring"] and not item["expanded"])
+
+
+def _mark_status(items: list[dict], me: dict) -> None:
+    addresses = my_addresses(me)
+    for item in items:
+        ev = item["_event"]
+        status = my_status(ev, addresses)
+        item["my_status"] = status
+        item["declined"] = status == "declined"
+        item["tentative"] = _lower(ev.get("status")) == "tentative" or status == "tentative"
+        item["clash"] = False
+        item["clash_with"] = []
+    spans = [(i, _span_utc(i)) for i in items if _clash_candidate(i)]
+    for n, (a, sa) in enumerate(spans):
+        for b, sb in spans[n + 1:]:
+            if sa and sb and sa[0] < sb[1] and sb[0] < sa[1]:
+                for x, y in ((a, b), (b, a)):
+                    x["clash"] = True
+                    x["clash_with"].append(str(y.get("title") or "(untitled)"))
+
+
+def _fetch_events(client, me, first: date, last: date, tz: ZoneInfo, cap: int = EVENT_CAP) -> dict:
+    """One read covering local days first..last: the one-off events overlapping the span, and each own meeting
+    calendar's recurring masters, so a multi-day search costs the same number of calls as a single day."""
+    _require(me, "id", "email")
+    if safe_id(me["id"]) is None:
+        raise _Unscoped("cannot scope to user: id is not a plain server id")
+    cals, cal_truncated = _calendars(client)
+    meeting_cals = [c for c in cals if is_meeting_calendar(c, me)]
+    start_iso = day_window(first, tz)[0]
+    end_iso = day_window(last, tz)[1]
+    out = section("ok")
+    if cal_truncated:
+        out["truncated"] = True
+        out["notes"].append(f"calendar list capped at {CALENDAR_CAP}; some calendars were not checked")
+    one_off = list_capped(client, "CalendarEvent.list", {"start_at": f"lt:{end_iso}", "end_at": f"gt:{start_iso}"},
+                          cap=cap)
+    _add_counts(out, one_off)
+    if one_off["truncated"]:
+        out["truncated"] = True
+        out["notes"].append(f"event query read first {len(one_off['rows'])} of {one_off['total']} events in the "
+                            "window")
+    recurring = []
+    for cal in meeting_cals:
+        cal_id = safe_id(cal.get("id"))
+        if cal_id is None:
+            out["notes"].append(f"calendar {cal.get('name')!r} has an unusual id; its recurring events were not "
+                                "checked")
+            continue
+        res = list_capped(client, "CalendarEvent.list", {"calendar_id": cal_id, "start_at": f"lt:{end_iso}"}, cap=cap)
+        _add_counts(out, res)
+        if res["truncated"]:
+            out["truncated"] = True
+            out["notes"].append(f"calendar {cal.get('name')!r}: read first {len(res['rows'])} of {res['total']} "
+                                "events")
+        recurring.append((cal, res["rows"]))
+    return {"out": out, "cal_names": {c.get("id"): c.get("name") for c in cals if c.get("id") is not None},
+            "meeting_ids": {c.get("id") for c in meeting_cals}, "one_off": one_off["rows"], "recurring": recurring}
+
+
+def _day_items(fetched: dict, me, day: date, tz: ZoneInfo, notes: list) -> list[dict]:
+    """Meetings on one local day from an earlier _fetch_events; items still carry their event under "_event"."""
+    cal_names, meeting_ids = fetched["cal_names"], fetched["meeting_ids"]
+    items: dict = {}
+    for ev in fetched["one_off"]:
+        if ev.get("recurrence_rule") or _lower(ev.get("status")) == "cancelled":
+            continue
+        if ev.get("id") in items or not is_my_event(ev, me, meeting_ids) or not _overlaps(ev, day, tz):
+            continue
+        items[ev.get("id")] = _meeting_item(ev, cal_names, tz, recurring=False, expanded=False)
+    for cal, rows in fetched["recurring"]:
+        for ev in rows:
+            if not ev.get("recurrence_rule") or _lower(ev.get("status")) == "cancelled" or ev.get("id") in items:
+                continue
+            if ev.get("calendar_id") != cal.get("id"):
+                continue
+            # the masters were read up to the end of the span; one starting after this day is not on it yet
+            if not _starts_by(ev, day, tz):
+                continue
+            hit = rrule.occurs_on(ev, day, tz)
+            if hit is True:
+                occ = _occurrence(ev, day, tz)
+                if occ:
+                    items[ev.get("id")] = _meeting_item(ev, cal_names, tz, True, True, occ[0], occ[1])
+                    continue
+                hit = None
+            if hit is None:
+                items[ev.get("id")] = _meeting_item(ev, cal_names, tz, recurring=True, expanded=False)
+                notes.append(f"recurring event, pattern not checked: {ev.get('title')}")
+    out = sorted(items.values(), key=lambda i: _sort_key(i, tz))
+    _mark_status(out, me)
+    return out
+
+
+def _starts_by(event: dict, day: date, tz: ZoneInfo) -> bool:
+    start = _aware(event.get("start_at"), tz)
+    # an unreadable start is left to occurs_on, which reports it as "pattern not checked"
+    return start is None or _utc(start) < _utc(datetime.combine(day + timedelta(days=1), time(0), tzinfo=tz))
+
+
+def _utc(value: datetime) -> datetime:
+    return value.astimezone(timezone.utc)
+
+
+def meetings_by_day(client, me, days: list[date], tz: ZoneInfo, cap: int = EVENT_CAP) -> tuple[dict, dict]:
+    """(section with counts/truncation/notes, {day: items}) for several days from one read. Items keep "_event"."""
+    fetched = _fetch_events(client, me, min(days), max(days), tz, cap=cap)
+    out = fetched["out"]
+    out["meeting_calendar_ids"] = fetched["meeting_ids"]
+    return out, {d: _day_items(fetched, me, d, tz, out["notes"]) for d in days}
+
+
+def _meetings(client, me, day: date, tz: ZoneInfo) -> dict:
+    out, per_day = meetings_by_day(client, me, [day], tz)
+    out["items"] = per_day[day]
+    return out
+
+
 def collect_meetings(client, me, day: date, tz: ZoneInfo) -> dict:
     try:
-        _require(me, "id", "email")
-        if safe_id(me["id"]) is None:
-            raise _Unscoped("cannot scope to user: id is not a plain server id")
-        cals, cal_truncated = _calendars(client)
-        cal_names = {c.get("id"): c.get("name") for c in cals if c.get("id") is not None}
-        meeting_cals = [c for c in cals if is_meeting_calendar(c, me)]
-        meeting_ids = {c.get("id") for c in meeting_cals}
-        start_iso, end_iso = day_window(day, tz)
-        out = section("ok")
-        if cal_truncated:
-            out["truncated"] = True
-            out["notes"].append(f"calendar list capped at {CALENDAR_CAP}; some calendars were not checked")
-
-        items: dict = {}
-        one_off = list_capped(client, "CalendarEvent.list", {"start_at": f"lt:{end_iso}", "end_at": f"gt:{start_iso}"},
-                              cap=EVENT_CAP)
-        _add_counts(out, one_off)
-        if one_off["truncated"]:
-            out["truncated"] = True
-            out["notes"].append(f"event query read first {len(one_off['rows'])} of {one_off['total']} events in the "
-                                "window")
-        for ev in one_off["rows"]:
-            if ev.get("recurrence_rule") or _lower(ev.get("status")) == "cancelled":
-                continue
-            if ev.get("id") in items or not is_my_event(ev, me, meeting_ids) or not _overlaps(ev, day, tz):
-                continue
-            items[ev.get("id")] = _meeting_item(ev, cal_names, tz, recurring=False, expanded=False)
-
-        for cal in meeting_cals:
-            cal_id = safe_id(cal.get("id"))
-            if cal_id is None:
-                out["notes"].append(f"calendar {cal.get('name')!r} has an unusual id; its recurring events were not "
-                                    "checked")
-                continue
-            res = list_capped(client, "CalendarEvent.list", {"calendar_id": cal_id, "start_at": f"lt:{end_iso}"},
-                              cap=EVENT_CAP)
-            _add_counts(out, res)
-            if res["truncated"]:
-                out["truncated"] = True
-                out["notes"].append(f"calendar {cal.get('name')!r}: read first {len(res['rows'])} of {res['total']} "
-                                    "events")
-            for ev in res["rows"]:
-                if not ev.get("recurrence_rule") or _lower(ev.get("status")) == "cancelled" or ev.get("id") in items:
-                    continue
-                if ev.get("calendar_id") != cal.get("id"):
-                    continue
-                hit = rrule.occurs_on(ev, day, tz)
-                if hit is True:
-                    occ = _occurrence(ev, day, tz)
-                    if occ:
-                        items[ev.get("id")] = _meeting_item(ev, cal_names, tz, True, True, occ[0], occ[1])
-                        continue
-                    hit = None
-                if hit is None:
-                    items[ev.get("id")] = _meeting_item(ev, cal_names, tz, recurring=True, expanded=False)
-                    out["notes"].append(f"recurring event, pattern not checked: {ev.get('title')}")
-        out["items"] = sorted(items.values(), key=lambda i: _sort_key(i, tz))
+        out = _meetings(client, me, day, tz)
+        out.pop("meeting_calendar_ids", None)
+        for item in out["items"]:
+            item.pop("_event", None)
         return out
     except _Unscoped as exc:
         return _scoped_error(exc)
@@ -395,7 +535,8 @@ def html_to_text(markup: str) -> str:
 
 
 MAIL_FIELDS = ("id", "message_id", "thread_id", "mailbox_id", "from_email", "from_name", "subject", "received_at",
-               "snippet", "body_text")
+               "snippet", "body_text", "list_unsubscribe", "split_category", "campaign_recipient_id")
+RAW_HEADERS_LIMIT = 8000
 
 
 def recipients(message: dict) -> set[str]:
@@ -421,9 +562,10 @@ def _tool_missing(exc: Exception) -> bool:
 MAIL_LOOKBACK_DAYS = 14
 
 
-def collect_mail(client, me, cap: int = 25, day: date | None = None, tz=None) -> dict:
+def collect_mail(client, me, cap: int = 25, day: date | None = None, tz=None, unread_only: bool = False) -> dict:
     """Inbox mail not yet answered, read or not: opening a message in the web app marks it read without answering
-    it, so "unread" alone would hide mail that still needs a reply. With `day`, only the last MAIL_LOOKBACK_DAYS."""
+    it, so "unread" alone would hide mail that still needs a reply. With `day`, only the last MAIL_LOOKBACK_DAYS.
+    `unread_only` keeps the literal reading of the brief (unread mail only)."""
     try:
         _require(me, "email")
         accounts = list_capped(client, "EmailAccount.list", {}, cap=MAILBOX_CAP)
@@ -462,6 +604,8 @@ def collect_mail(client, me, cap: int = 25, day: date | None = None, tz=None) ->
             out["notes"].append(f"{len(rows) - len(owned)} visible mailboxes belong to other users and were skipped")
         filters = {"folder": "inbox", "mailbox_id": ",".join(sorted(my_boxes)), "sort_by": "received_at",
                    "sort_order": "desc"}
+        if unread_only:
+            filters["is_read"] = False
         since = None
         if day is not None:
             since = day_window(day - timedelta(days=MAIL_LOOKBACK_DAYS), tz or timezone.utc)[0]
@@ -481,6 +625,8 @@ def collect_mail(client, me, cap: int = 25, day: date | None = None, tz=None) ->
                 continue
             if m.get("folder") not in (None, "inbox"):
                 continue
+            if unread_only and m.get("is_read") is True:
+                continue
             received = _aware(m.get("received_at"), timezone.utc)
             if since is not None and received is not None and received < _aware(since, timezone.utc):
                 continue
@@ -489,6 +635,9 @@ def collect_mail(client, me, cap: int = 25, day: date | None = None, tz=None) ->
             item = {k: m.get(k) for k in MAIL_FIELDS}
             item["mailbox_email"] = box_email.get(str(m.get("mailbox_id")))
             item["is_read"] = m.get("is_read") is True
+            # only the skip rules read headers (Auto-Submitted, Precedence); cap them so one message can't bloat output
+            headers = m.get("raw_headers")
+            item["raw_headers"] = headers[:RAW_HEADERS_LIMIT] if isinstance(headers, str) else None
             if not isinstance(item["body_text"], str) or not item["body_text"].strip():
                 markup = m.get("body_html")
                 item["body_text"] = html_to_text(markup if isinstance(markup, str) else "")

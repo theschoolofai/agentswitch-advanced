@@ -20,5 +20,10 @@ def _isolate(monkeypatch, tmp_path):
         if key.startswith(ENV_PREFIXES):
             monkeypatch.delenv(key, raising=False)
     monkeypatch.chdir(tmp_path)
+    # The token cache defaults to ~/.config; a test must never read or write the real one.
+    home = tmp_path / "home"
+    home.mkdir(exist_ok=True)
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(home / ".config"))
     monkeypatch.setattr(time, "sleep", lambda *_a, **_k: None)
     yield

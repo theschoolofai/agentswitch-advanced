@@ -519,8 +519,8 @@ def test_login_redirect_is_error():
 @pytest.mark.parametrize("status", [301, 302, 307])
 def test_llm_redirect_is_error_without_second_request(status):
     opener = FakeOpener(fn=lambda rec: (status, b""))
-    llm = make_llm("https://llm.example/v1", "sk-x-secret", "gpt-4.1-mini", timeout=5, opener=opener,
-                   sleep=lambda s: None)
+    llm = make_llm({"base_url": "https://llm.example/v1", "api": "openai", "key": "sk-x-secret",
+                    "model": "gpt-4.1-mini"}, opener=opener, sleep=lambda s: None)
     with pytest.raises(LlmError):
         llm("s", "u")
     assert len(opener.calls) == 1
@@ -553,6 +553,7 @@ def cli(monkeypatch):
         monkeypatch.setenv("AGENTSWITCH_BASE_URL", "https://platform.invalid")
         if llm_fn is not None:
             monkeypatch.setenv("OPENAI_API_KEY", "sk-cli-secret")
+            monkeypatch.setenv("OPENAI_BASE_URL", "https://llm.invalid/v1")  # v1: no default endpoint
             monkeypatch.setattr(llm_mod, "make_llm", lambda *a, **k: FakeLLM(fn=llm_fn))
 
     def run(*argv):
@@ -587,13 +588,15 @@ def test_cli_exit_0_when_draft_saved(cli, capsys):
     assert len(fc.calls_to("EmailMessage.create")) == 1
 
 
-def test_cli_json_write_failure_exit_1(cli, capsys, tmp_path):
+def test_cli_json_write_failure_exit_2(cli, capsys, tmp_path):
+    # v1: the briefing is already printed when the JSON write fails, so it is "something failed" (2), not 1
     install, run = cli
     install(mail_world([]))
     code = run("--today", "2026-11-04", "--tz", "America/New_York", "--no-llm",
                "--json", str(tmp_path / "missing-dir" / "out.json"))
     captured = capsys.readouterr()
-    assert code == 1
+    assert code == 2
+    assert "Daily briefing" in captured.out
     assert "Traceback" not in captured.err
     assert "platform-token-secret" not in captured.out + captured.err
 

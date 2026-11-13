@@ -143,7 +143,6 @@ def test_query_uses_overlap_filters():
     assert a["end_at"].startswith("gt:")
     assert same_instant(a["start_at"][3:], "2026-11-05T00:00:00-05:00")
     assert same_instant(a["end_at"][3:], "2026-11-04T00:00:00-05:00")
-    assert a["limit"] == 0
 
 
 def test_cancelled_excluded():
@@ -244,10 +243,10 @@ def test_recurring_on_others_calendar_not_queried():
 
 
 def test_unsupported_rrule_included_unexpanded_with_note():
-    events = [event("yearly", "2025-11-04T10:00:00-05:00", "2025-11-04T11:00:00-05:00",
-                    recurrence_rule="FREQ=YEARLY")]
+    events = [event("setpos", "2025-11-04T10:00:00-05:00", "2025-11-04T11:00:00-05:00",
+                    recurrence_rule="FREQ=MONTHLY;BYSETPOS=1;BYDAY=TU")]
     _, s = run(events)
-    assert ids(s) == ["yearly"]
+    assert ids(s) == ["setpos"]
     item = s["items"][0]
     assert item["expanded"] is False
     assert item["recurring"] is True
@@ -314,3 +313,129 @@ def test_duration_preserved_for_long_recurring_event():
     dur = datetime.fromisoformat(item["end_at"]) - datetime.fromisoformat(item["start_at"])
     assert dur == timedelta(hours=2, minutes=30)
     assert same_instant(item["start_at"], "2026-11-04T22:00:00-05:00")
+
+
+# ---- D5: my status, declined, tentative, clash ----------------------------------------------------------------
+
+STATUS_KEYS = {"my_status", "declined", "tentative", "clash", "clash_with"}
+
+
+def by_id(section):
+    return {i["id"]: i for i in section["items"]}
+
+
+def att(email, status, **kw):
+    return {"email": email, "name": "x", "role": "required", "status": status, "is_organizer": False, **kw}
+
+
+def test_items_carry_status_keys_and_no_internal_fields():
+    _, s = run([event("e1", "2026-11-04T10:00:00-05:00", "2026-11-04T11:00:00-05:00")])
+    item = s["items"][0]
+    assert STATUS_KEYS <= set(item)
+    assert not any(k.startswith("_") for k in item)
+    assert "meeting_calendar_ids" not in s
+    assert item["my_status"] is None and item["declined"] is False and item["tentative"] is False
+    assert item["clash"] is False and item["clash_with"] == []
+
+
+def test_my_status_from_my_attendee_entry_case_insensitive():
+    events = [
+        event("acc", "2026-11-04T08:00:00-05:00", "2026-11-04T08:30:00-05:00",
+              attendees=[att("other@example.test", "declined"), att("ME@EXAMPLE.test", "accepted")]),
+        event("na", "2026-11-04T09:00:00-05:00", "2026-11-04T09:30:00-05:00",
+              attendees=[att("me@example.test", "NEEDS_ACTION")]),
+        event("tent", "2026-11-04T10:00:00-05:00", "2026-11-04T10:30:00-05:00",
+              attendees=[att("me@example.test", "Tentative")]),
+        event("dec", "2026-11-04T11:00:00-05:00", "2026-11-04T11:30:00-05:00",
+              attendees=[att("me@example.test", "declined")]),
+        event("dash", "2026-11-04T12:00:00-05:00", "2026-11-04T12:30:00-05:00",
+              attendees=[att("me@example.test", "needs-action")]),
+        event("odd", "2026-11-04T13:00:00-05:00", "2026-11-04T13:30:00-05:00",
+              attendees=[att("me@example.test", "delegated")]),
+        event("str", "2026-11-04T14:00:00-05:00", "2026-11-04T14:30:00-05:00", attendees=["me@example.test"]),
+        event("none", "2026-11-04T15:00:00-05:00", "2026-11-04T15:30:00-05:00",
+              attendees=[att("other@example.test", "accepted")]),
+    ]
+    items = by_id(run(events)[1])
+    assert {k: v["my_status"] for k, v in items.items()} == {
+        "acc": "accepted", "na": "needs_action", "tent": "tentative", "dec": "declined", "dash": "needs_action",
+        "odd": None, "str": None, "none": None}
+
+
+def test_extra_addresses_on_me_are_used():
+    me = dict(ME, addresses=["alias@example.test"])
+    ev = event("a", "2026-11-04T10:00:00-05:00", "2026-11-04T11:00:00-05:00",
+               attendees=[att("Alias@example.test", "declined")])
+    item = run([ev], me=me)[1]["items"][0]
+    assert item["my_status"] == "declined" and item["declined"] is True
+
+
+def test_declined_stays_listed_marked_and_out_of_clash():
+    events = [
+        event("dec", "2026-11-04T10:00:00-05:00", "2026-11-04T11:00:00-05:00",
+              attendees=[att("me@example.test", "declined")]),
+        event("ok", "2026-11-04T10:30:00-05:00", "2026-11-04T11:30:00-05:00"),
+    ]
+    items = by_id(run(events)[1])
+    assert set(items) == {"dec", "ok"}
+    assert items["dec"]["declined"] is True
+    assert items["dec"]["clash"] is False and items["dec"]["clash_with"] == []
+    assert items["ok"]["clash"] is False and items["ok"]["clash_with"] == []
+
+
+def test_tentative_from_event_status_or_my_status():
+    events = [
+        event("ev_tent", "2026-11-04T08:00:00-05:00", "2026-11-04T08:30:00-05:00", status="Tentative"),
+        event("my_tent", "2026-11-04T09:00:00-05:00", "2026-11-04T09:30:00-05:00",
+              attendees=[att("me@example.test", "tentative")]),
+        event("firm", "2026-11-04T10:00:00-05:00", "2026-11-04T10:30:00-05:00",
+              attendees=[att("me@example.test", "accepted")]),
+    ]
+    items = by_id(run(events)[1])
+    assert items["ev_tent"]["tentative"] is True and items["ev_tent"]["my_status"] is None
+    assert items["my_tent"]["tentative"] is True
+    assert items["firm"]["tentative"] is False
+
+
+def test_clash_overlap_marks_both_with_titles():
+    events = [
+        event("a", "2026-11-04T10:00:00-05:00", "2026-11-04T11:00:00-05:00", title="Alpha"),
+        event("b", "2026-11-04T15:30:00Z", "2026-11-04T16:30:00Z", title="Beta"),  # 10:30-11:30 local
+        event("c", "2026-11-04T11:00:00-05:00", "2026-11-04T12:00:00-05:00", title="Gamma"),
+    ]
+    items = by_id(run(events)[1])
+    assert items["a"]["clash"] is True and items["a"]["clash_with"] == ["Beta"]
+    assert items["b"]["clash"] is True and items["b"]["clash_with"] == ["Alpha", "Gamma"]
+    assert items["c"]["clash"] is True and items["c"]["clash_with"] == ["Beta"]
+
+
+def test_touching_meetings_do_not_clash():
+    events = [
+        event("a", "2026-11-04T10:00:00-05:00", "2026-11-04T11:00:00-05:00"),
+        event("b", "2026-11-04T11:00:00-05:00", "2026-11-04T12:00:00-05:00"),
+    ]
+    items = by_id(run(events)[1])
+    assert not items["a"]["clash"] and not items["b"]["clash"]
+
+
+def test_all_day_never_clashes():
+    events = [
+        event("ad", "2026-11-04T00:00:00-05:00", "2026-11-05T00:00:00-05:00", all_day=True),
+        event("m", "2026-11-04T10:00:00-05:00", "2026-11-04T11:00:00-05:00"),
+    ]
+    items = by_id(run(events)[1])
+    assert not items["ad"]["clash"] and not items["m"]["clash"]
+
+
+def test_expanded_recurring_clashes_with_one_off_but_unchecked_pattern_does_not():
+    events = [
+        event("weekly", "2026-10-07T10:00:00-04:00", "2026-10-07T11:00:00-04:00", recurrence_rule="FREQ=WEEKLY",
+              title="Weekly"),
+        event("odd", "2026-10-07T10:00:00-04:00", "2026-10-07T11:00:00-04:00",
+              recurrence_rule="FREQ=MONTHLY;BYSETPOS=1;BYDAY=WE", title="Odd"),
+        event("one", "2026-11-04T10:30:00-05:00", "2026-11-04T10:45:00-05:00", title="One"),
+    ]
+    items = by_id(run(events)[1])
+    assert items["weekly"]["clash_with"] == ["One"]
+    assert items["one"]["clash_with"] == ["Weekly"]
+    assert items["odd"]["clash"] is False

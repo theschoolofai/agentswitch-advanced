@@ -255,22 +255,42 @@ def _total(tool: str, payload) -> int:
 
 
 def list_capped(client, tool: str, filters: dict, cap: int = 200, page: int = 100) -> dict:
+    """Up to `cap` rows. The first page also carries the total, so there is no separate count call: each platform call
+    costs about 2 s, and most lists fit in one page. Rows already received are never thrown away because the
+    server's numbers disagree with them."""
     filters = dict(filters or {})
-    head = client.call(tool, {**filters, "limit": 0})
-    total = _total(tool, head)
-    if total == 0:
-        return {"rows": [], "total": 0, "truncated": False}
-    want = min(total, cap)
+    if cap <= 0 or page <= 0:
+        total = _total(tool, client.call(tool, {**filters, "limit": 0}))
+        return {"rows": [], "total": total, "truncated": total > max(cap, 0)}
     rows: list = []
-    offset = 0
-    while len(rows) < want:
-        limit = min(page, want - len(rows))
+    ids: set = set()
+    offset, reported, more = 0, None, False
+    while len(rows) < cap and (reported is None or len(rows) < reported):
+        limit = min(page, cap - len(rows))
         payload = client.call(tool, {**filters, "limit": limit, "offset": offset})
+        if reported is None:
+            # A reply without a usable total cannot be told apart from "nothing there", so it is an error.
+            reported = _total(tool, payload)
         batch = payload.get("data") if isinstance(payload, dict) else None
+        if batch is None and reported == 0:
+            batch = []
         if not isinstance(batch, list) or not all(isinstance(r, dict) for r in batch):
             raise McpError(kind="http", message=f"{tool}: list data is not a list of objects")
         if not batch:
             break
-        rows.extend(batch[:limit])
-        offset += len(batch[:limit])
-    return {"rows": rows, "total": total, "truncated": total > cap}
+        full = len(batch) >= limit
+        batch = batch[:limit]
+        fresh = [r for r in batch if r.get("id") is None or r.get("id") not in ids]
+        rows.extend(fresh)
+        ids.update(r["id"] for r in fresh if r.get("id") is not None)
+        if len(fresh) < len(batch):
+            # Rows seen before: the server ignored the offset. Paging further would only repeat them.
+            more = True
+            break
+        offset += len(batch)
+        if len(rows) > reported:
+            # The total was too low; keep what arrived, and a full page means there may be more.
+            more = more or full
+            break
+    total = max(reported or 0, len(rows))
+    return {"rows": rows[:cap], "total": total, "truncated": total > cap or more}

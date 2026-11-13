@@ -273,17 +273,25 @@ def rows(n, prefix="r"):
     return [{"id": f"{prefix}{i}", "created_by": "u1"} for i in range(n)]
 
 
-def test_list_capped_counts_first_with_limit_zero():
+def test_list_capped_first_page_carries_the_total():
+    # No separate limit=0 count call any more: each platform call costs ~2 s
     fc = FakeClient({"id": "u1"}, {"Task": rows(5)})
     out = list_capped(fc, "Task.list", {"created_by": "u1"}, cap=200, page=100)
+    assert len(fc.calls) == 1
     first = fc.calls[0]
     assert first[0] == "Task.list"
-    assert first[1]["limit"] == 0
+    assert first[1]["limit"] == 100 and first[1]["offset"] == 0
     assert first[1]["created_by"] == "u1"
     assert out["total"] == 5
     assert out["truncated"] is False
     assert [r["id"] for r in out["rows"]] == [f"r{i}" for i in range(5)]
-    assert all(args["created_by"] == "u1" for _, args in fc.calls)
+
+
+def test_list_capped_first_page_limited_by_cap():
+    fc = FakeClient({"id": "u1"}, {"Task": rows(50)})
+    out = list_capped(fc, "Task.list", {}, cap=25, page=100)
+    assert [a["limit"] for _, a in fc.calls] == [25]
+    assert len(out["rows"]) == 25 and out["truncated"] is True and out["total"] == 50
 
 
 def test_list_capped_zero_total_makes_one_call():
@@ -293,6 +301,17 @@ def test_list_capped_zero_total_makes_one_call():
     assert out == {"rows": [], "total": 0, "truncated": False}
 
 
+def test_list_capped_missing_total_is_an_error():
+    class NoTotal(FakeClient):
+        def call(self, name, arguments=None):
+            out = super().call(name, arguments)
+            out.pop("total")
+            return out
+
+    with pytest.raises(McpError):
+        list_capped(NoTotal({"id": "u1"}, {"Task": rows(3)}), "Task.list", {})
+
+
 def test_list_capped_pages_by_offset_and_caps():
     fc = FakeClient({"id": "u1"}, {"Task": rows(250)})
     out = list_capped(fc, "Task.list", {}, cap=200, page=100)
@@ -300,10 +319,9 @@ def test_list_capped_pages_by_offset_and_caps():
     assert out["total"] == 250
     assert out["truncated"] is True
     assert [r["id"] for r in out["rows"]] == [f"r{i}" for i in range(200)]
-    row_calls = [a for _, a in fc.calls[1:]]
-    assert [a.get("offset", 0) for a in row_calls] == [0, 100]
-    assert all(0 < a["limit"] <= 100 for a in row_calls)
-    assert len(fc.calls) == 3
+    assert [a.get("offset", 0) for _, a in fc.calls] == [0, 100]
+    assert all(0 < a["limit"] <= 100 for _, a in fc.calls)
+    assert len(fc.calls) == 2
 
 
 def test_list_capped_never_requests_more_than_cap():
@@ -311,7 +329,7 @@ def test_list_capped_never_requests_more_than_cap():
     out = list_capped(fc, "Task.list", {}, cap=150, page=100)
     assert len(out["rows"]) == 150
     assert out["truncated"] is True
-    requested = sum(a["limit"] for _, a in fc.calls[1:])
+    requested = sum(a["limit"] for _, a in fc.calls)
     assert requested <= 150
     assert [r["id"] for r in out["rows"]] == [f"r{i}" for i in range(150)]
 
@@ -322,8 +340,7 @@ def test_list_capped_exact_cap_not_truncated():
     assert len(out["rows"]) == 20
     assert out["truncated"] is False
     assert len({r["id"] for r in out["rows"]}) == 20
-    offsets = [a.get("offset", 0) for _, a in fc.calls[1:]]
-    assert offsets == [0, 7, 14]
+    assert [a.get("offset", 0) for _, a in fc.calls] == [0, 7, 14]
 
 
 def test_list_capped_stops_on_empty_page_when_total_lies():
@@ -331,6 +348,44 @@ def test_list_capped_stops_on_empty_page_when_total_lies():
     fc.total_override["Task.list"] = 1000
     out = list_capped(fc, "Task.list", {}, cap=200, page=10)
     assert len(out["rows"]) == 30
-    # count + 3 full pages + one empty page, and no more
-    assert len(fc.calls) == 5
+    # 3 full pages + one empty page, and no more
+    assert len(fc.calls) == 4
     assert out["total"] == 1000
+
+
+def test_list_capped_total_too_low_keeps_rows():
+    fc = FakeClient({"id": "u1"}, {"Task": rows(250)})
+    fc.total_override["Task.list"] = 10
+    out = list_capped(fc, "Task.list", {}, cap=200, page=100)
+    assert [r["id"] for r in out["rows"]] == [f"r{i}" for i in range(100)]  # nothing received is thrown away
+    assert out["total"] == 100
+    assert out["truncated"] is True  # a full page: more may exist
+    assert len(fc.calls) == 1
+
+
+def test_list_capped_total_too_low_short_page_is_complete():
+    fc = FakeClient({"id": "u1"}, {"Task": rows(12)})
+    fc.total_override["Task.list"] = 5
+    out = list_capped(fc, "Task.list", {}, cap=200, page=100)
+    assert len(out["rows"]) == 12 and out["total"] == 12 and out["truncated"] is False
+
+
+def test_list_capped_server_ignoring_offset_stops_and_marks_truncated():
+    fc = FakeClient({"id": "u1"}, {"Task": rows(250)})
+    fc.ignored_filters = set()
+    real = fc._list
+
+    def no_offset(name, entity, args):
+        return real(name, entity, {**args, "offset": 0})
+
+    fc._list = no_offset
+    out = list_capped(fc, "Task.list", {}, cap=250, page=100)
+    assert [r["id"] for r in out["rows"]] == [f"r{i}" for i in range(100)]
+    assert out["truncated"] is True
+    assert len(fc.calls) == 2
+
+
+def test_list_capped_rows_without_ids_are_not_deduplicated():
+    fc = FakeClient({"id": "u1"}, {"Task": [{"title": "a"}, {"title": "a"}, {"title": "b"}]})
+    out = list_capped(fc, "Task.list", {}, cap=10, page=2)
+    assert len(out["rows"]) == 3 and out["truncated"] is False

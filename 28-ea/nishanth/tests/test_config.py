@@ -59,11 +59,18 @@ def test_platform_mode_does_not_read_env_file(tmp_path, monkeypatch):
     environ = {"AGENTSWITCH_TOKEN": SECRET_TOKEN, "AGENTSWITCH_BASE_URL": "https://platform.example",
                "AGENTSWITCH_INSTANCE": "seat28", "EA_ENV_FILE": str(bad)}
     out = config.resolve(ns(env_file=str(bad)), environ)
+    assert out["platform"] is True
     assert out["token"] == SECRET_TOKEN
     assert out["base_url"] == "https://platform.example"
     assert out["instance"] == "seat28"
+    assert out["systems"] == ["seat28"]
     assert out["email"] != "file@x.test"
-    assert out["password"] in (None, "")
+
+
+def test_platform_mode_is_exactly_one_system():
+    environ = {"AGENTSWITCH_TOKEN": "t", "AGENTSWITCH_BASE_URL": "https://p.example"}
+    assert config.resolve(ns(), environ)["systems"] == [None]
+    assert config.resolve(ns(system=["keystone"]), environ)["systems"] == ["keystone"]
 
 
 def test_platform_mode_requires_base_url(capsys):
@@ -77,21 +84,36 @@ def test_platform_mode_requires_base_url(capsys):
 def test_env_file_mode(tmp_path):
     p = write(tmp_path / "creds", f"EA_EMAIL=me@x.test\nEA_PASSWORD_KEYSTONE='{SECRET_PW}'\n")
     out = config.resolve(ns(instance="keystone", env_file=p), {})
-    assert out["instance"] == "keystone"
-    assert out["base_url"] == "https://class.agentswitch.theschoolofai.in"
+    assert out["platform"] is False
+    assert out["systems"] == ["keystone"] and out["explicit"] is True
     assert out["email"] == "me@x.test"
-    assert out["password"] == SECRET_PW
+    assert out["env"][config.password_var("keystone")] == SECRET_PW
     assert out["token"] in (None, "")
     assert out["llm"] is None
     assert out["today"] is None
     assert out["tz"] is None
 
 
-def test_password_variable_is_per_instance(tmp_path):
-    p = write(tmp_path / "creds", "EA_EMAIL=me@x.test\nEA_PASSWORD_KEYSTONE=k-pw\nEA_PASSWORD_SURYODAYA=s-pw\n")
-    out = config.resolve(ns(instance="suryodaya", env_file=p), {})
-    assert out["password"] == "s-pw"
-    assert out["base_url"] == "https://agentswitch.theschoolofai.in"
+def test_default_is_every_system_d1(tmp_path):
+    out = config.resolve(ns(), {"EA_EMAIL": "me@x.test"})
+    assert out["systems"] == ["keystone", "suryodaya"]
+    assert out["explicit"] is False
+
+
+def test_system_flag_repeatable_and_instance_alias():
+    out = config.resolve(ns(system=["Suryodaya"], instance=["keystone"]), {})
+    assert out["systems"] == ["suryodaya", "keystone"]
+
+
+def test_unknown_system_is_config_error():
+    with pytest.raises(SystemExit) as exc:
+        config.resolve(ns(system=["mars"]), {})
+    assert "mars" in str(exc.value.code)
+
+
+def test_password_variable_is_per_instance():
+    assert config.password_var("suryodaya") == "EA_PASSWORD_SURYODAYA"
+    assert config.password_var("keystone") == "EA_PASSWORD_KEYSTONE"
 
 
 def test_ea_env_file_variable_used(tmp_path):
@@ -113,61 +135,95 @@ def test_process_env_beats_file(tmp_path):
                "EA_TODAY": "2026-11-04"}
     out = config.resolve(ns(instance="keystone", env_file=p), environ)
     assert out["email"] == "env@x.test"
-    assert out["password"] == "env-pw"
+    assert out["env"]["EA_PASSWORD_KEYSTONE"] == "env-pw"
     assert out["tz"] == "Asia/Kolkata"
     assert str(out["today"]) == "2026-11-04"
 
 
 def test_cli_flags_beat_env_for_today_and_tz(tmp_path):
     p = write(tmp_path / "creds", "EA_EMAIL=me@x.test\nEA_PASSWORD_KEYSTONE=pw\n")
-    out = config.resolve(ns(instance="keystone", env_file=p, today="2026-12-01", tz="America/New_York"),
+    out = config.resolve(ns(instance="keystone", env_file=p, today="2026-12-01", tz=["America/New_York"]),
                          {"EA_TODAY": "2026-11-04", "EA_TZ": "Asia/Kolkata"})
     assert str(out["today"]) == "2026-12-01"
     assert out["tz"] == "America/New_York"
 
 
-def test_missing_password_exits_naming_variable(tmp_path, capsys):
-    p = write(tmp_path / "creds", f"EA_EMAIL=me@x.test\nOPENAI_API_KEY={SECRET_KEY}\nEA_PASSWORD_SURYODAYA={SECRET_PW}\n")
-    with pytest.raises(SystemExit) as exc:
-        config.resolve(ns(instance="keystone", env_file=p), {})
+def test_tz_per_system_d6():
+    out = config.resolve(ns(tz=["keystone=Europe/Berlin", "suryodaya=Asia/Tokyo"]), {})
+    assert out["tz"] is None
+    assert out["tz_by_system"] == {"keystone": "Europe/Berlin", "suryodaya": "Asia/Tokyo"}
+    both = config.resolve(ns(tz=["UTC", "keystone=Europe/Berlin"]), {})
+    assert both["tz"] == "UTC" and both["tz_by_system"] == {"keystone": "Europe/Berlin"}
+
+
+@pytest.mark.parametrize("tz", [["Mars/Base"], ["keystone=Mars/Base"], ["mars=UTC"], ["UTC", "Asia/Tokyo"]])
+def test_bad_tz_is_config_error(tz):
+    with pytest.raises(SystemExit):
+        config.resolve(ns(tz=tz), {})
+
+
+def test_missing_credentials_are_not_a_config_error_anymore(tmp_path, capsys):
+    # v1: a system without credentials is reported in its own block by the runner, so resolve no longer exits.
+    p = write(tmp_path / "creds", f"OPENAI_API_KEY={SECRET_KEY}\nEA_PASSWORD_SURYODAYA={SECRET_PW}\n")
+    out = config.resolve(ns(instance="keystone", env_file=p), {})
+    assert out["email"] is None
     captured = capsys.readouterr()
-    msg = str(exc.value.code) + captured.out + captured.err
-    assert "EA_PASSWORD_KEYSTONE" in msg
-    assert SECRET_PW not in msg
-    assert SECRET_KEY not in msg
+    assert SECRET_PW not in captured.out + captured.err
 
 
-def test_missing_email_exits_naming_variable(tmp_path, capsys):
-    p = write(tmp_path / "creds", f"EA_PASSWORD_KEYSTONE={SECRET_PW}\n")
-    with pytest.raises(SystemExit) as exc:
-        config.resolve(ns(instance="keystone", env_file=p), {})
-    captured = capsys.readouterr()
-    msg = str(exc.value.code) + captured.out + captured.err
-    assert "EA_EMAIL" in msg
-    assert SECRET_PW not in msg
+# --------------------------------------------------------------------------- model settings (D3)
 
-
-def test_llm_none_without_api_key(tmp_path):
-    p = write(tmp_path / "creds", "EA_EMAIL=me@x.test\nEA_PASSWORD_KEYSTONE=pw\nOPENAI_MODEL=gpt-4.1\n")
+def test_llm_none_without_url(tmp_path):
+    p = write(tmp_path / "creds", f"EA_EMAIL=me@x.test\nOPENAI_MODEL=gpt-4.1\nOPENAI_API_KEY={SECRET_KEY}\n")
     out = config.resolve(ns(instance="keystone", env_file=p), {})
     assert out["llm"] is None
 
 
-def test_llm_defaults_with_api_key(tmp_path):
-    p = write(tmp_path / "creds", f"EA_EMAIL=me@x.test\nEA_PASSWORD_KEYSTONE=pw\nOPENAI_API_KEY={SECRET_KEY}\n")
-    out = config.resolve(ns(instance="keystone", env_file=p), {})
-    assert out["llm"] == {"base_url": "https://api.openai.com/v1", "api_key": SECRET_KEY, "model": "gpt-4.1-mini"}
+def test_openai_variables_mean_auto_without_defaults(tmp_path):
+    out = config.resolve(ns(), {"OPENAI_BASE_URL": "https://llm.example/v1"})
+    assert out["llm"] == {"base_url": "https://llm.example/v1", "api": "auto", "key": None, "model": None}
 
 
-def test_llm_overrides_from_env(tmp_path):
-    p = write(tmp_path / "creds", "EA_EMAIL=me@x.test\nEA_PASSWORD_KEYSTONE=pw\n")
-    out = config.resolve(ns(instance="keystone", env_file=p),
-                         {"OPENAI_API_KEY": "k", "OPENAI_BASE_URL": "https://llm.example/v1", "OPENAI_MODEL": "o4"})
-    assert out["llm"] == {"base_url": "https://llm.example/v1", "api_key": "k", "model": "o4"}
+def test_llm_overrides_from_env():
+    out = config.resolve(ns(), {"OPENAI_API_KEY": "k", "OPENAI_BASE_URL": "https://llm.example/v1",
+                                "OPENAI_MODEL": "o4"})
+    assert out["llm"] == {"base_url": "https://llm.example/v1", "api": "auto", "key": "k", "model": "o4"}
+
+
+def test_ea_llm_settings_win_over_openai():
+    out = config.resolve(ns(), {"EA_LLM_URL": "http://gateway.local:9000", "EA_LLM_API": "chat",
+                                "OPENAI_BASE_URL": "https://api.example/v1", "OPENAI_API_KEY": "k"})
+    assert out["llm"] == {"base_url": "http://gateway.local:9000", "api": "chat", "key": None, "model": None}
+
+
+def test_ea_llm_api_defaults_to_auto():
+    out = config.resolve(ns(), {"EA_LLM_URL": "https://x.example", "EA_LLM_MODEL": "m", "EA_LLM_KEY": "kk"})
+    assert out["llm"] == {"base_url": "https://x.example", "api": "auto", "key": "kk", "model": "m"}
+
+
+@pytest.mark.parametrize("env", [
+    {"EA_LLM_URL": "https://x.example", "EA_LLM_API": "openai"},           # openai needs a model
+    {"EA_LLM_URL": "https://x.example", "EA_LLM_API": "grpc"},             # unknown API
+    {"EA_LLM_URL": "ftp://x.example"},                                     # not http(s)
+    {"EA_LLM_MODEL": "m"},                                                 # EA_LLM_* without the URL
+])
+def test_llm_config_errors(env):
+    with pytest.raises(SystemExit):
+        config.resolve(ns(), {**env, "EA_LLM_KEY": SECRET_KEY} if "EA_LLM_URL" in env else env)
+
+
+def test_llm_config_error_hides_key():
+    with pytest.raises(SystemExit) as exc:
+        config.resolve(ns(), {"EA_LLM_URL": "https://x.example", "EA_LLM_API": "openai", "EA_LLM_KEY": SECRET_KEY})
+    assert SECRET_KEY not in str(exc.value.code)
+
+
+def test_no_llm_flag_turns_model_off():
+    assert config.resolve(ns(no_llm=True), {"OPENAI_BASE_URL": "https://x.example"})["llm"] is None
 
 
 def test_platform_mode_llm_from_process_env():
     out = config.resolve(ns(), {"AGENTSWITCH_TOKEN": "t", "AGENTSWITCH_BASE_URL": "https://p.example",
-                                "OPENAI_API_KEY": "k2"})
-    assert out["llm"]["api_key"] == "k2"
-    assert out["llm"]["model"] == "gpt-4.1-mini"
+                                "OPENAI_API_KEY": "k2", "OPENAI_BASE_URL": "https://glc.example"})
+    assert out["llm"]["key"] == "k2"
+    assert out["llm"]["model"] is None

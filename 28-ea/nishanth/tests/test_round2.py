@@ -208,7 +208,8 @@ DANGEROUS = [
 
 
 def run_one(draft):
-    fc = world([msg("a", body_text="Can we meet?")])
+    # the email names 3pm so the benign "transfer the meeting to 3pm" passes the D4 time check
+    fc = world([msg("a", body_text="Can we meet at 3pm?")])
     b = build_briefing(fc, ME, DAY, NY, llm=FakeLLM([answer(True, draft)]), save_drafts=True)
     return fc, b["mail"]["items"][0]
 
@@ -374,6 +375,5 @@ def test_drafts_listing_fetched_once_per_run():
                        save_drafts=True)
     assert len(fc.calls_to("EmailMessage.create")) == 3
     calls = drafts_calls(fc)
-    assert len([a for a in calls if a.get("limit") == 0]) == 1
-    assert len([a for a in calls if a.get("limit")]) == 1
+    assert len(calls) == 1  # one page carries the total too (no separate limit=0 count call)
     assert all(i["draft_saved"]["status"] == "created" for i in b["mail"]["items"])

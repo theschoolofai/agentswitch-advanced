@@ -86,3 +86,101 @@ def test_resolve_tz_invalid_name_raises():
     fc = FakeClient(ME, {"Calendar": []})
     with pytest.raises(ZoneInfoNotFoundError):
         resolve_tz(fc, ME, "Mars/Olympus_Mons")
+
+
+# ---- D6: system default zones and where the zone came from -----------------------------------------------------
+
+from ea_briefing import collect  # noqa: E402
+
+
+def test_system_zones_exact():
+    assert collect.SYSTEM_ZONES == {"suryodaya": "Asia/Kolkata", "keystone": "America/New_York"}
+
+
+def test_tz_source_explicit():
+    fc = FakeClient(ME, {"Calendar": [_cal(id="mine", created_by="u1", timezone="Asia/Kolkata")]})
+    assert resolve_tz(fc, ME, "Europe/Berlin", "keystone").key == "Europe/Berlin"
+    assert fc.tz_source == "explicit"
+    assert fc.calls == []
+
+
+def test_own_calendar_beats_system_default():
+    fc = FakeClient(ME, {"Calendar": [_cal(id="mine", created_by="u1", timezone="Asia/Tokyo")]})
+    assert resolve_tz(fc, ME, None, "suryodaya").key == "Asia/Tokyo"
+    assert fc.tz_source == "calendar"
+
+
+@pytest.mark.parametrize("system,zone", [("suryodaya", "Asia/Kolkata"), ("keystone", "America/New_York"),
+                                         ("Keystone", "America/New_York"), (" SURYODAYA ", "Asia/Kolkata")])
+def test_system_default_when_no_calendar_zone(system, zone):
+    fc = FakeClient(ME, {"Calendar": [_cal(id="theirs", created_by="u9", owner_party_id="p9",
+                                           timezone="Europe/London")]})
+    assert resolve_tz(fc, ME, None, system).key == zone
+    assert fc.tz_source == "system default"
+    assert getattr(fc, "tz_note", None) is None
+
+
+def test_invalid_calendar_zone_falls_to_system_default():
+    fc = FakeClient(ME, {"Calendar": [_cal(id="mine", created_by="u1", timezone="Mars/Base")]})
+    assert resolve_tz(fc, ME, None, "keystone").key == "America/New_York"
+    assert fc.tz_source == "system default"
+
+
+@pytest.mark.parametrize("system", [None, "", "acme"])
+def test_utc_only_for_unknown_system(system):
+    fc = FakeClient(ME, {"Calendar": []})
+    assert str(resolve_tz(fc, ME, None, system)) == "UTC"
+    assert fc.tz_source == "utc fallback"
+
+
+def test_lookup_failure_uses_system_default_and_notes_it():
+    fc = FakeClient(ME, {"Calendar": []})
+    fc.fail("Calendar.list", kind="network", message="down")
+    assert resolve_tz(fc, ME, None, "suryodaya").key == "Asia/Kolkata"
+    assert fc.tz_source == "system default"
+    assert fc.tz_note == "time zone lookup failed; times shown in Asia/Kolkata"
+
+
+def test_lookup_failure_unknown_system_is_utc_with_note():
+    fc = FakeClient(ME, {"Calendar": []})
+    fc.fail("Calendar.list", kind="network", message="down")
+    assert str(resolve_tz(fc, ME, None)) == "UTC"
+    assert fc.tz_source == "utc fallback"
+    assert fc.tz_note == collect.TZ_LOOKUP_FAILED
+
+
+def test_client_without_settable_attributes_still_resolves():
+    class Frozen:
+        __slots__ = ()
+
+        def call(self, name, arguments=None):
+            raise RuntimeError("down")
+
+    assert resolve_tz(Frozen(), ME, None, "keystone").key == "America/New_York"
+
+
+def test_calendar_list_read_once_per_client_and_failures_not_kept():
+    from datetime import date
+    fc = FakeClient(ME, {"Calendar": [_cal(id="mine", created_by="u1", timezone="Asia/Kolkata")], "CalendarEvent": []})
+    fc.fail("Calendar.list", kind="network", message="down")
+    resolve_tz(fc, ME, None, "keystone")
+    assert collect.collect_meetings(fc, ME, date(2026, 11, 4), NY)["status"] == "error"
+    del fc.failures["Calendar.list"]
+    assert resolve_tz(fc, ME, None, "keystone").key == "Asia/Kolkata"
+    collect.collect_meetings(fc, ME, date(2026, 11, 4), NY)
+    assert fc.names().count("Calendar.list") == 3  # two failed reads, then one kept
+
+
+@pytest.mark.parametrize("tz_name,system,cals", [("Europe/Berlin", None, []), (None, "keystone", []),
+                                                 (None, None, []), (None, None, [{"id": "m", "type": "personal",
+                                                                                  "created_by": "u1",
+                                                                                  "timezone": "Asia/Tokyo"}])])
+def test_tz_source_is_always_a_known_value(tz_name, system, cals):
+    fc = FakeClient(ME, {"Calendar": cals})
+    resolve_tz(fc, ME, tz_name, system)
+    assert fc.tz_source in collect.TZ_SOURCES
+
+
+def test_unknown_tz_source_is_refused():
+    with pytest.raises(ValueError):
+        collect._set_source(FakeClient(ME, {}), "guess")
