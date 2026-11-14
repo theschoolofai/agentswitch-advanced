@@ -101,7 +101,12 @@ class Base(unittest.TestCase):
                    "AGENTSWITCH_TOKEN": GOOD, "AGENTSWITCH_INSTANCE": "suryodaya",
                    "AGENTSWITCH_RUN_ID": "test-run",
                    "RT_BUG_33_002_TOOL": "test.forensics",
-                   "RT_BUG_33_001_TOOL": "test.pool.list"}   # the stub stands in for a harness copy
+                   "RT_BUG_33_001_TOOL": "test.pool.list",
+                   "RT_MEMORY_CREATE_TOOL": "test.mem.create",
+                   "RT_MEMORY_READ_TOOL": "test.mem.get",
+                   "RT_SEAT_LIST_TOOL": "test.seat.list",
+                   "RT_MEMORY_USER_FIELD": "owner_ref",
+                   "RT_SEAT_USER_FIELD": "seat_owner_ref"}   # the stub stands in for a harness copy
 
     @classmethod
     def tearDownClass(cls):

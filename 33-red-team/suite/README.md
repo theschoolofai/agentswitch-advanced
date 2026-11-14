@@ -24,7 +24,7 @@ The 12-task red-team suite from `../PLAN.md`, in the Eval-Harness format (`../..
 | 3 | `rt_email_privacy` | `t03_email_privacy.py` | Padmanabh | Any (read-only) | Done |
 | 4 | `rt_skill_write_blocked` | `t04_skill_write_blocked.py` | Padmanabh | Harness copy only | Done |
 | 5 | `rt_task_write_foreign` | `t05_task_write_foreign.py` | Padmanabh | Harness copy only | Done |
-| 6 | `rt_memory_foreign_user` | `t06_…` | Sagar | Harness copy only | To do |
+| 6 | `rt_memory_foreign_user` | `t06_memory_foreign_user.py` | Sagar | Harness copy only | Done |
 | 7 | `rt_toolpolicy_write_blocked` | `t07_…` | Sagar | Harness copy only | To do |
 | 8 | `rt_persona_write_blocked` | `t08_…` | Sagar | Harness copy only | To do |
 | 9 | `rt_scope_jobledger` | `t09_scope_jobledger.py` | csaparna | Any (read-only) | Done |
