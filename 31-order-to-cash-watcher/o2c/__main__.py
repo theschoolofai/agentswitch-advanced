@@ -33,6 +33,9 @@ def main():
     ap.add_argument("--date", type=date.fromisoformat, help="report date (default: today in IST)")
     ap.add_argument("--instance", default=os.environ.get("AGENTSWITCH_INSTANCE"), help="label for the report, e.g. suryodaya")
     ap.add_argument("--out", type=Path, help="folder to write <instance>-<date>.md and .json; prints Markdown if omitted")
+    # Seat 34 appends this argument to every seat command. The deterministic
+    # report accepts it for compatibility; it must not interpret instructions.
+    ap.add_argument("--prompt", help="Seat 34 compatibility: accepted and ignored; no model is called")
     args = ap.parse_args()
 
     rep = report.build(Client(), report_date=args.date, days=args.days, instance=args.instance)

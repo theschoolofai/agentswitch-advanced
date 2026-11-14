@@ -145,16 +145,25 @@ Only invoices are blocked (`BUG-31-001`, see `findings/BUG-31-001.md`, raised in
 - **Admin notice (repository access):** the repository is now private (the 3 Nov note said public). Everyone, not only seat leads, sends their GitHub username to the admin in a DM for read access. Each person works in their own fork and opens a PR; the seat lead merges after one review. Seat 31 git strategy written up in `PLAN.md` (How we work in git).
 - PR #17 is built on PR #13 (6 shared commits), and each has its own version of the "move platform detail to private notes" commit. Plan: merge #13 first, then rebase #17 onto `upstream/main` and keep the #17 version.
 
+## 12 Nov 2026 — Deepak: daily report, applied receipts checked against live data
+- Daily report run read-only on both systems (N = 7). Sections 2 (invoices overdue) and 3 (payments not applied) are unchanged from 11 Nov: same rows, same totals; only the ages moved on by a day. Counts in `private/platform-notes.md`.
+- **BUG-31-001: invoices and applied receipts are both readable on both systems** (closed 11 Nov, rechecked today). Until today our notes on applied receipts came from the 17 Sep schema snapshot; today's check against live rows:
+  - every applied receipt is paid and allocated to exactly one invoice, as the instructor said on 7 Nov; all use the newer allocation model;
+  - the schema's computed applied and unused totals are filled in, and the receipt's value is in the allocation base field, not the amount field;
+  - each receipt's history log has two events: the receipt being posted, then the money being applied to the invoice.
+- **Fix:** `history_net()` in `o2c/receipts.py` added both events, so every receipt looked over-applied by 2×. It now counts only events that apply money to an invoice; a reversal takes back only an event that was counted. 3 new tests (they fail on the old code); 117 tests pass. The daily report was not affected (it does not call that check).
+- Invoice balance: on a few invoices the balance is also reduced by credits applied, so balance = total − paid − credits. The report reads the balance field directly, so its figures are right.
+
 ## Open items
 - [ ] Sunil reviews PR #13; Deepak merges once write access arrives.
 - [ ] Deepak sends GitHub username `deephazar-eva-ai` to the instructor.
 - [ ] Sunil sends GitHub username `jssunil` to the admin in a DM (read access to the private repository).
 - [x] After #13 merges (13 Nov): merged `upstream/main` into `seat31/deepak-drafts` (PR #17), conflicts resolved in favour of the reviewed #17 versions; re-approval requested.
-- [ ] Instructor gives `team31a` the invoice and applied-receipt read tools (`BUG-31-001`).
+- [x] Instructor gives `team31a` the invoice and applied-receipt read tools (`BUG-31-001`). Done: fixed 10 Nov, verified 11 Nov, rechecked against live rows 12 Nov.
 - [ ] Instructor answers what N to use (default 7).
 - [ ] Agree the split with Sunil. His proposal: Sunil = orders not invoiced + report; Deepak = overdue invoices + payments. Resolve the section A overlap with PR #13.
 - [ ] Send BUG-31-001 and BUG-31-002 to the course team as text (the format names the course team; the seat group post may not reach them). Text versions are in the gitignored `private/` folder. Then update each report's Status and the bug list in `PLAN.md`.
-- [ ] Daily read-only recheck on both systems: tool list for invoice and applied-receipt tools (BUG-31-001), mailbox list (BUG-31-002). Add a line to each report's Log; close the bug when access appears.
+- [x] Daily read-only recheck on both systems: tool list for invoice and applied-receipt tools (BUG-31-001), mailbox list (BUG-31-002). Done: both bugs closed 11 Nov.
 - [ ] Talk to Sunil tonight: walk through the 7 Nov evening split and working guidelines. Confirm he takes task 11 and wires `Ctx(agent=...)` for task 10.
 - [ ] Sunday 8 Nov weekly update: finished / next / one blocker.
 - [x] Rerun the report after the release deploys. Done: all runs were after the 6 Nov 3:48 pm IST release.

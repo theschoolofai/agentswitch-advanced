@@ -96,6 +96,32 @@ class Payments(unittest.TestCase):
         self.assertTrue(r["unapplied_payments"]["passed"], r["unapplied_payments"]["evidence"])
         self.assertTrue(r["unapplied_excludes_outgoing"]["passed"])
         self.assertIn("outgoing_or_transfer_checked=2", r["unapplied_excludes_outgoing"]["evidence"])
+        self.assertIn("summary_adds_up=True", r["unapplied_payments"]["evidence"])
+
+    def test_summary_that_does_not_add_up_fails(self):
+        c = ctx()
+        c.report()["sections"]["payments_not_applied"]["summary"]["by_age"][0]["unallocated"] += 1.0
+        r = by_id(T.run(c, [t for t in T.TASKS if t[0] == "unapplied_payments"]))
+        self.assertFalse(r["unapplied_payments"]["passed"])
+        self.assertIn("summary_adds_up=False", r["unapplied_payments"]["evidence"])
+
+    def test_task7_checks_each_currency_separately(self):
+        c = T.Ctx(FakePlatform({"SalesOrder": [], "EmailMessage": [], "Payment": [pay("R1"), pay("R2", party="P2")],
+                                "Party": [{"id": "P1", "currency_id": "INR"}, {"id": "P2", "currency_id": "USD"}]},
+                               tools={"Party.list"}), "t", D)
+        res = T.unapplied_payments(c)
+        self.assertTrue(res["passed"], res["evidence"])
+        self.assertIn("expected=INR 1/100.00, USD 1/100.00", res["evidence"])
+
+    def test_task7_fails_if_summary_moves_money_between_currencies(self):
+        c = T.Ctx(FakePlatform({"SalesOrder": [], "EmailMessage": [], "Payment": [pay("R1"), pay("R2", party="P2")],
+                                "Party": [{"id": "P1", "currency_id": "INR"}, {"id": "P2", "currency_id": "USD"}]},
+                               tools={"Party.list"}), "t", D)
+        by_age = c.report()["sections"]["payments_not_applied"]["summary"]["by_age"]
+        by_age[0]["currency"] = by_age[1]["currency"]   # totals still add up overall, but not per currency
+        res = T.unapplied_payments(c)
+        self.assertFalse(res["passed"], res["evidence"])
+        self.assertIn("summary_adds_up=False", res["evidence"])
 
     def test_recount_catches_a_report_that_drops_a_row(self):
         c = ctx()

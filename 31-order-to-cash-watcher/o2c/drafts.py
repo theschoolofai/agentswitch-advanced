@@ -125,6 +125,10 @@ def accounts_digest(rep, matches, accounts_email=None):
             cands = (by_payment.get(r["number"]) or {}).get("candidates") or []
             match = ", ".join(f"{c['kind']} {c['number']} ({_amount(c['amount'], c.get('currency'))}"
                               f"{', same amount' if c['exact'] else ''})" for c in cands) or "no candidate found"
+            if r.get("hint") == "same_amount":   # receipt history (PaymentReceived), when readable
+                match += f"; CHECK: same amount already recorded as applied receipt {', '.join(r['same_amount_receipts'])}"
+            elif r.get("hint") == "has_history":
+                match += f"; customer has {r['receipts_paid']} applied receipts"
             rows.append([r["number"], _plain(r["customer"] or "unknown customer", CUSTOMER_WIDTH), r["payment_date"] or "?",
                          _amount(r["unallocated"], r.get("currency")), r["status"], match, test(r)])
         lines += text_table(["Payment", "Customer", "Received", "Unallocated", "Status", "Possible match", ""], rows, right={3})

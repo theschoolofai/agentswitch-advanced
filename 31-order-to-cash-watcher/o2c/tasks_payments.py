@@ -126,17 +126,49 @@ def _payments(ctx):
     return ctx.client.list_all("Payment")   # unfiltered on purpose: catches a server-side filter dropping rows
 
 
+def _by_currency(pairs):
+    """{currency: (count, total)} from (currency, amount) pairs; currencies are never mixed."""
+    out = {}
+    for cur, amount in pairs:
+        n, t = out.get(cur, (0, 0.0))
+        out[cur] = (n + 1, round(t + amount, 2))
+    return out
+
+
+def _fmt(totals):
+    return ", ".join(f"{c or 'unknown'} {n}/{t:,.2f}" for c, (n, t) in sorted(totals.items(), key=lambda kv: str(kv[0]))) or "none"
+
+
 def unapplied_payments(ctx):
     raw = _payments(ctx)
     expected = {p["number"]: _money(p.get("unallocated")) for p in raw
                 if p.get("type") == "receive" and p.get("docstatus") != 2 and _money(p.get("unallocated")) > 0}
-    rows = ctx.report()["sections"]["payments_not_applied"]["rows"]
+    sec = ctx.report()["sections"]["payments_not_applied"]
+    rows = sec["rows"]
     got = {r["number"]: r["unallocated"] for r in rows}
-    exp_total, got_total = round(sum(expected.values()), 2), round(sum(got.values()), 2)
-    passed = set(got) == set(expected) and abs(exp_total - got_total) < 0.01
+    amounts_ok = set(got) == set(expected) and all(abs(got[n] - expected[n]) < 0.01 for n in got)
+    # Per-currency recount: recounted amounts, grouped by the currency the report gave each row.
+    cur_of = {r["number"]: r.get("currency") for r in rows}
+    exp_cur = _by_currency((cur_of.get(n), a) for n, a in expected.items())
+    # Every summary table must add up, currency by currency, to the same figures as the recount.
+    summ = sec.get("summary") or {}
+    tables = {name: {} for name in ("by_age", "by_status", "by_customer")}
+    for name in tables:
+        for b in summ.get(name, []):
+            n, t = tables[name].get(b.get("currency"), (0, 0.0))
+            tables[name][b.get("currency")] = (n + b["count"], round(t + b["unallocated"], 2))
+    headline = {b.get("currency"): (b["count"], b["unallocated"]) for b in summ.get("by_currency", [])}
+
+    def same(a, b):
+        return set(a) == set(b) and all(a[k][0] == b[k][0] and abs(a[k][1] - b[k][1]) < 0.01 for k in a)
+
+    summary_ok = summ.get("count") == len(expected) and same(headline, exp_cur) and all(same(t, exp_cur) for t in tables.values())
+    passed = amounts_ok and summary_ok
     note = "; no incoming payments on this instance (expected, instructor 7 Nov)" if not raw else ""
     return _ok(passed, f"verifier=payment_recount; rows expected={len(expected)} got={len(got)}; "
-                       f"unallocated expected={exp_total:,.2f} got={got_total:,.2f}; {_diff(set(expected), set(got))}{note}")
+                       f"unallocated by currency expected={_fmt(exp_cur)} got={_fmt(_by_currency((r.get('currency'), r['unallocated']) for r in rows))}; "
+                       f"summary_adds_up={summary_ok} (by_currency={_fmt(headline)}); "
+                       f"{_diff(set(expected), set(got))}{note}")
 
 
 def unapplied_excludes_outgoing(ctx):

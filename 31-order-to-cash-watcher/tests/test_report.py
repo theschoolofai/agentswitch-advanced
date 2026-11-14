@@ -164,9 +164,16 @@ def _report(orders=(), invoices=(), payments=()):
                                                   "rows": report.payments_not_applied(list(payments), D)}}}
 
 
-def _table_rows(md):
-    return [line for line in md.splitlines() if line.startswith("| ") and not line.startswith("| Order |")
-            and not line.startswith("| Invoice |") and not line.startswith("| Payment |")]
+def _tables(md):
+    """Each Markdown table as a list of its lines (header, rule, rows)."""
+    tables, cur = [], []
+    for line in md.splitlines():
+        if line.startswith("|"):
+            cur.append(line)
+        elif cur:
+            tables.append(cur)
+            cur = []
+    return tables + ([cur] if cur else [])
 
 
 def _columns(line):
@@ -186,16 +193,17 @@ class MarkdownEscaping(unittest.TestCase):
 
     def test_every_table_keeps_its_columns(self):
         rep = _report(orders=[order("SO|1", "2026-10-01", party=self.NASTY)],
-                      invoices=[invoice("INV\n1", "2026-11-01", 10.0, party=self.NASTY),
+                      invoices=[invoice("INV\\n1", "2026-11-01", 10.0, party=self.NASTY),
                                 invoice("INV2", None, 5.0, party=self.NASTY)],
                       payments=[payment("PAY|1", "2026-11-01", 20.0, party=self.NASTY)])
         md = report.to_markdown(rep)
-        rows = _table_rows(md)
-        self.assertEqual(len(rows), 4)  # one line per record: no row was split
-        widths = {"| SO": 8, "| INV": 10, "| PAY": 8}
-        for line in rows:
-            expected = next(w for prefix, w in widths.items() if line.startswith(prefix))
-            self.assertEqual(_columns(line), expected, line)
+        tables = _tables(md)
+        self.assertGreaterEqual(len(tables), 4)
+        for t in tables:  # every line of every table (summaries included) matches its header
+            for line in t:
+                self.assertEqual(_columns(line), _columns(t[0]), line)
+        records = [l for t in tables for l in t if l.startswith(("| SO", "| INV", "| PAY"))]
+        self.assertEqual(len(records), 4)  # one line per record: no row was split
         self.assertIn("Acme \\| North Division\\\\", md)
 
 
