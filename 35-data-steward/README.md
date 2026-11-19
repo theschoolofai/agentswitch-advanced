@@ -40,13 +40,52 @@ its band counts, so it can hold more pairs than those counts add up to. The cour
 and runs the same scan whatever the request says (no model yet). Nothing on the platform changes: a person decides,
 and makes any change through the platform.
 
+The instructor scores `results/dedupe_pairs.json`, committed in a pull request. Make it from the saved reports,
+with no platform call:
+```bash
+uv run python -m data_steward.results                        # both systems; or --instance suryodaya
+```
+One entry per proposed pair: `kind`, `id_a`, `id_b`, `confidence` and `reason`, and no names, emails or other record
+values. Pairs a person labelled "rejected" are left out. Test-record pairs are listed, with "test-run records" at the
+end of the reason: since 17 Nov, repeated test-run records count as duplicates. A review pair's confidence is capped
+at 0.6, since a pair held at review can score 1.0; today every review pair gets 0.6. Standard output gives counts per
+system and kind (listed, left out, written, test-record pairs written) and the number of rejected labels that match
+no listed pair: check it is 0 before committing the file.
+
+Example: the export of the made-up records in `tests/` (ids such as `p1` are made up; these are not pairs from
+either system). `tests/test_results.py` checks that this block is what the exporter writes for those records.
+```json
+[
+  {"kind": "party", "id_a": "p1", "id_b": "p2", "confidence": 1.0, "reason": "same email; matching name"},
+  {"kind": "party", "id_a": "p3", "id_b": "p4", "confidence": 0.6, "reason": "matching name"},
+  {"kind": "party", "id_a": "p5", "id_b": "p6", "confidence": 0.6, "reason": "matching name; test-run records"},
+  {"kind": "party", "id_a": "q1", "id_b": "q2", "confidence": 0.6,
+   "reason": "same email; matching name; held at review: different phone numbers"},
+  {"kind": "item", "id_a": "i1", "id_b": "i2", "confidence": 0.6,
+   "reason": "matching name; same unit of measure; held at review: different item codes"}
+]
+```
+The first pair is proposed (score 0.9 or more) and keeps its score. The other four are review pairs, listed at 0.6;
+`p5` and `p6` are test-run records, and `q1` and `q2` score 1.0 but are held at review because their phone numbers
+differ.
+
+The committed file, made from the 17 Nov reports, holds 63 pairs, all at review (0.6): 62 Keystone party pairs
+between records left by earlier test runs, and 1 Suryodaya item pair. No pair reached propose. The 16 Suryodaya party
+pairs at review are left out because they are labelled rejected. Pull request #25 gives the counts per system and
+kind.
+
 Two optional input files in `local/` (git-ignored; the run reads them and never writes them). To reproduce another
 person's report, get both from them privately:
 
 - `local/test-tags.txt`: confirmed test-run tags, one per line (the tag, then where it was seen). Without it, pairs of
   test-run records are not set apart and show up as pairs to review.
 - `local/dedupe-labels.json`: a person's verdicts, `{"<pair id>": "accepted" | "rejected"}`. Without it, every pair
-  shows as awaiting a decision.
+  shows as awaiting a decision, and `results` lists the pairs that person rejected.
+
+Anyone with a seat 35 login can rerun the scan from this repository: everything that decides the pairs is committed,
+and only `.env` and `local/` are not. The same commit (same rules version) run on unchanged data finds the same pairs
+with the same scores and bands. Two runs write the same file only when the rows, the date, the labels and the test
+tags all match, so a run on a later day, or after someone edits a record, differs.
 
 What the Markdown report shows:
 

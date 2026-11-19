@@ -1,0 +1,443 @@
+[
+  {
+    "kind": "party",
+    "id_a": "1739a3df-59d2-4166-b32a-0201b5e7a50d",
+    "id_b": "e3ede49b-5bf0-4fa2-83b2-eecc4382ebfd",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "24d261dd-c058-4b90-8965-bb7b4fcb6614",
+    "id_b": "397e834f-75aa-4367-875d-e9323dd1579a",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "24d261dd-c058-4b90-8965-bb7b4fcb6614",
+    "id_b": "3ba975b9-cccc-4cfb-9af9-d94999feff4b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "24d261dd-c058-4b90-8965-bb7b4fcb6614",
+    "id_b": "47860f52-00fd-40d4-a1ab-a0bcb35e47d6",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "24d261dd-c058-4b90-8965-bb7b4fcb6614",
+    "id_b": "ecd7689b-c25a-4f26-9ac9-c1704da00555",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "24d261dd-c058-4b90-8965-bb7b4fcb6614",
+    "id_b": "eeadf312-1365-4174-8f34-b6f58b7ebb59",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "25a179f2-1cfd-42a0-8aab-1140e0f8150a",
+    "id_b": "2c62f07d-d10c-483f-8465-1100c6f9f1cb",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "25a179f2-1cfd-42a0-8aab-1140e0f8150a",
+    "id_b": "3dcc3e7c-e0e7-4588-b7dd-a33e591062b8",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "25a179f2-1cfd-42a0-8aab-1140e0f8150a",
+    "id_b": "9037a7bf-08f8-45ae-ab5e-af8ac3f0fab9",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "25a179f2-1cfd-42a0-8aab-1140e0f8150a",
+    "id_b": "b7e89cdb-53d0-454d-8c32-fe68cd9d752a",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "25a179f2-1cfd-42a0-8aab-1140e0f8150a",
+    "id_b": "d28a0fc6-f5ec-446a-92ce-5b8d9dac4086",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2c62f07d-d10c-483f-8465-1100c6f9f1cb",
+    "id_b": "3dcc3e7c-e0e7-4588-b7dd-a33e591062b8",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2c62f07d-d10c-483f-8465-1100c6f9f1cb",
+    "id_b": "9037a7bf-08f8-45ae-ab5e-af8ac3f0fab9",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2c62f07d-d10c-483f-8465-1100c6f9f1cb",
+    "id_b": "b7e89cdb-53d0-454d-8c32-fe68cd9d752a",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2c62f07d-d10c-483f-8465-1100c6f9f1cb",
+    "id_b": "d28a0fc6-f5ec-446a-92ce-5b8d9dac4086",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2ee16c13-2fa2-483d-b649-f3f0ce3e74f3",
+    "id_b": "5c1e0405-8cf8-4a89-81f4-a9ab663fbcd5",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2ee16c13-2fa2-483d-b649-f3f0ce3e74f3",
+    "id_b": "7f64f6dc-bba8-41f8-8590-1d2584260409",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2ee16c13-2fa2-483d-b649-f3f0ce3e74f3",
+    "id_b": "9081c3ea-0761-4250-98eb-23775acdc5a5",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2ee16c13-2fa2-483d-b649-f3f0ce3e74f3",
+    "id_b": "be5a3606-b11a-4a35-8ff8-2cc044897300",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "2ee16c13-2fa2-483d-b649-f3f0ce3e74f3",
+    "id_b": "bf32b4b5-2ec9-4529-9fe2-19b47df17d02",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "397e834f-75aa-4367-875d-e9323dd1579a",
+    "id_b": "3ba975b9-cccc-4cfb-9af9-d94999feff4b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "397e834f-75aa-4367-875d-e9323dd1579a",
+    "id_b": "47860f52-00fd-40d4-a1ab-a0bcb35e47d6",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "397e834f-75aa-4367-875d-e9323dd1579a",
+    "id_b": "ecd7689b-c25a-4f26-9ac9-c1704da00555",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "397e834f-75aa-4367-875d-e9323dd1579a",
+    "id_b": "eeadf312-1365-4174-8f34-b6f58b7ebb59",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "3ba975b9-cccc-4cfb-9af9-d94999feff4b",
+    "id_b": "47860f52-00fd-40d4-a1ab-a0bcb35e47d6",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "3ba975b9-cccc-4cfb-9af9-d94999feff4b",
+    "id_b": "ecd7689b-c25a-4f26-9ac9-c1704da00555",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "3ba975b9-cccc-4cfb-9af9-d94999feff4b",
+    "id_b": "eeadf312-1365-4174-8f34-b6f58b7ebb59",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "3dcc3e7c-e0e7-4588-b7dd-a33e591062b8",
+    "id_b": "9037a7bf-08f8-45ae-ab5e-af8ac3f0fab9",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "3dcc3e7c-e0e7-4588-b7dd-a33e591062b8",
+    "id_b": "b7e89cdb-53d0-454d-8c32-fe68cd9d752a",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "3dcc3e7c-e0e7-4588-b7dd-a33e591062b8",
+    "id_b": "d28a0fc6-f5ec-446a-92ce-5b8d9dac4086",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "47860f52-00fd-40d4-a1ab-a0bcb35e47d6",
+    "id_b": "ecd7689b-c25a-4f26-9ac9-c1704da00555",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "47860f52-00fd-40d4-a1ab-a0bcb35e47d6",
+    "id_b": "eeadf312-1365-4174-8f34-b6f58b7ebb59",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "5364cef3-57e1-49ea-96b2-836e96279463",
+    "id_b": "f469a6e4-c693-4b74-ac14-4768bde5fad8",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "59dc8594-bdfe-4215-b643-c92051b2c40a",
+    "id_b": "71048579-4019-4e09-9826-be37d67d0db9",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "59dc8594-bdfe-4215-b643-c92051b2c40a",
+    "id_b": "9d6421de-043f-4073-b244-42ba6cf69091",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "59dc8594-bdfe-4215-b643-c92051b2c40a",
+    "id_b": "bd83adbf-55f9-4a7d-8cbf-e336bf6e98b8",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "59dc8594-bdfe-4215-b643-c92051b2c40a",
+    "id_b": "dc463ce8-d537-4bda-8ddd-fca0547f345e",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "59dc8594-bdfe-4215-b643-c92051b2c40a",
+    "id_b": "ebc50c31-d6f5-4aea-83c7-8c6977a8ae1b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "5c1e0405-8cf8-4a89-81f4-a9ab663fbcd5",
+    "id_b": "7f64f6dc-bba8-41f8-8590-1d2584260409",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "5c1e0405-8cf8-4a89-81f4-a9ab663fbcd5",
+    "id_b": "9081c3ea-0761-4250-98eb-23775acdc5a5",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "5c1e0405-8cf8-4a89-81f4-a9ab663fbcd5",
+    "id_b": "be5a3606-b11a-4a35-8ff8-2cc044897300",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "5c1e0405-8cf8-4a89-81f4-a9ab663fbcd5",
+    "id_b": "bf32b4b5-2ec9-4529-9fe2-19b47df17d02",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "71048579-4019-4e09-9826-be37d67d0db9",
+    "id_b": "9d6421de-043f-4073-b244-42ba6cf69091",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "71048579-4019-4e09-9826-be37d67d0db9",
+    "id_b": "bd83adbf-55f9-4a7d-8cbf-e336bf6e98b8",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "71048579-4019-4e09-9826-be37d67d0db9",
+    "id_b": "dc463ce8-d537-4bda-8ddd-fca0547f345e",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "71048579-4019-4e09-9826-be37d67d0db9",
+    "id_b": "ebc50c31-d6f5-4aea-83c7-8c6977a8ae1b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "7f64f6dc-bba8-41f8-8590-1d2584260409",
+    "id_b": "9081c3ea-0761-4250-98eb-23775acdc5a5",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "7f64f6dc-bba8-41f8-8590-1d2584260409",
+    "id_b": "be5a3606-b11a-4a35-8ff8-2cc044897300",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "7f64f6dc-bba8-41f8-8590-1d2584260409",
+    "id_b": "bf32b4b5-2ec9-4529-9fe2-19b47df17d02",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9037a7bf-08f8-45ae-ab5e-af8ac3f0fab9",
+    "id_b": "b7e89cdb-53d0-454d-8c32-fe68cd9d752a",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9037a7bf-08f8-45ae-ab5e-af8ac3f0fab9",
+    "id_b": "d28a0fc6-f5ec-446a-92ce-5b8d9dac4086",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9081c3ea-0761-4250-98eb-23775acdc5a5",
+    "id_b": "be5a3606-b11a-4a35-8ff8-2cc044897300",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9081c3ea-0761-4250-98eb-23775acdc5a5",
+    "id_b": "bf32b4b5-2ec9-4529-9fe2-19b47df17d02",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9d6421de-043f-4073-b244-42ba6cf69091",
+    "id_b": "bd83adbf-55f9-4a7d-8cbf-e336bf6e98b8",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9d6421de-043f-4073-b244-42ba6cf69091",
+    "id_b": "dc463ce8-d537-4bda-8ddd-fca0547f345e",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "9d6421de-043f-4073-b244-42ba6cf69091",
+    "id_b": "ebc50c31-d6f5-4aea-83c7-8c6977a8ae1b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "b7e89cdb-53d0-454d-8c32-fe68cd9d752a",
+    "id_b": "d28a0fc6-f5ec-446a-92ce-5b8d9dac4086",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "bd83adbf-55f9-4a7d-8cbf-e336bf6e98b8",
+    "id_b": "dc463ce8-d537-4bda-8ddd-fca0547f345e",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "bd83adbf-55f9-4a7d-8cbf-e336bf6e98b8",
+    "id_b": "ebc50c31-d6f5-4aea-83c7-8c6977a8ae1b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "be5a3606-b11a-4a35-8ff8-2cc044897300",
+    "id_b": "bf32b4b5-2ec9-4529-9fe2-19b47df17d02",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "dc463ce8-d537-4bda-8ddd-fca0547f345e",
+    "id_b": "ebc50c31-d6f5-4aea-83c7-8c6977a8ae1b",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "party",
+    "id_a": "ecd7689b-c25a-4f26-9ac9-c1704da00555",
+    "id_b": "eeadf312-1365-4174-8f34-b6f58b7ebb59",
+    "confidence": 0.6,
+    "reason": "matching name; test-run records"
+  },
+  {
+    "kind": "item",
+    "id_a": "4a53117b-ee9f-4435-963f-efd0bc300ca5",
+    "id_b": "95f50d4a-b6cc-40c5-8a9e-9bcba21db781",
+    "confidence": 0.6,
+    "reason": "similar names; same unit of measure; held at review: different item codes"
+  }
+]

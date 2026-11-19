@@ -38,6 +38,10 @@ working for before anything else that calls them. The exception is `python -m da
 - No AgentSwitch source code, schemas, database files or screenshots of internal screens. Anything derived from the
   platform (tool lists, input schemas, field maps, probe dumps) goes in `local/`, which is git-ignored. Check
   `local/tools-<instance>.json` for a tool's arguments instead of guessing them.
+- One exception, asked for by the instructor on 10 Nov: `results/dedupe_pairs.json`, the file the instructor scores,
+  holds record ids (kind, the two ids, a confidence and a reason from fixed wording). Only
+  `python -m data_steward.results` writes it. Never edit it by hand or add names, GSTINs, emails or other record
+  values to it.
 
 ## Git workflow
 
@@ -60,6 +64,8 @@ description which pull request it builds on; until that one merges, the new one 
 | `data_steward/dedupe.py` | the duplicate matcher: normalize, group, score, band, exclusions. Pure functions, no network |
 | `data_steward/proposals.py` | merge proposals: suggested survivor, field differences, reference counts (read-only calls) |
 | `data_steward/report.py` | the scan and the JSON and Markdown report behind `python -m data_steward.dedupe` |
+| `data_steward/results.py` | offline export of the saved reports to `results/dedupe_pairs.json`, the file the instructor scores |
+| `results/dedupe_pairs.json` | committed: one entry per proposed pair, ids only (see "The repository is public") |
 | `docs/first-task-plan.md` | the first-task plan: decisions, signals, exclusions, build steps |
 | `tests/` | offline tests; every network call is faked. `tests/data/dedupe_tuning.json` is the made-up tuning set; `dedupe_heldback*.json` are the held-back sets (see the plan) |
 | `local/` | git-ignored platform-derived output: tool lists, reads, reports, test tags, labels |
@@ -74,15 +80,26 @@ uv run ruff check .
 uv run python -m data_steward.probe    # read-only: what tools this seat sees on each system
 uv run python -m data_steward.probe --instance keystone
 uv run python -m data_steward.dedupe --instance keystone   # read-only scan; ask first (see "Live systems")
+uv run python -m data_steward.results  # offline: saved reports in local/ -> results/dedupe_pairs.json
 ```
 
 ## The duplicate report
 
 - `python -m data_steward.dedupe` reads every party and item on one system (the harness runner's, else the one
   given, else Keystone) and writes `local/dedupe-<instance>.json`, `.md` and `-pairs.json` (pair ids, record ids,
-  score, band; for a grader), owner-only. It always writes to `local/`: the report holds real party data, and record
+  score, band), owner-only. It always writes to `local/`: the report holds real party data, and record
   ids are platform data too. Standard output is counts only, safe for a pull request description; never add ids to it.
-- `--prompt "<request>"`, which the course harness appends, is accepted and ignored: every request gets the same
+- `python -m data_steward.results` turns the saved reports into `results/dedupe_pairs.json` in the instructor's
+  format, with no platform call. It lists propose and review pairs except those a person labelled "rejected" (read
+  from `local/dedupe-labels.json` at export time). Test-record pairs are listed, their reason ending "test-run
+  records" (repeated test-run records count as duplicates since 17 Nov). Confidence is a propose pair's score, or a
+  review pair's score capped at 0.6 (so every review pair gets 0.6 today). The reason is built only from fixed wording
+  for the matcher's signals and caps; one without wording stops the export. It checks every field it reads and
+  refuses a report from another rules version, with a cut-off table or with a malformed pair. A failure prints one
+  fixed line, quoting no value or id from the input, and leaves the earlier file as it was. Standard output is counts
+  only, including rejected labels that match no pair in the loaded reports (a typo would otherwise list the pair).
+- `--prompt "<request>"`, which the course harness appends, is accepted and ignored (the instructor said on 10 Nov
+  that the harness contract does not apply to seat 35 for 15 Nov; kept for version 1): every request gets the same
   read-only scan until a model reads requests (version 1). A failure exits 1 with one line on standard error. That
   line never quotes a platform reply or its error code (either can hold record data: an item's SKU is its `code`);
   under the runner an unforeseen error names only its type, and only a local run shows its traceback. A failed write
