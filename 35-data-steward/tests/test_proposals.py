@@ -175,4 +175,4 @@ def test_a_private_copy_of_a_repeated_id_never_reaches_a_proposal():
             party("p2", "Gristmill Foods", email="info@gristmill.example", phone="5552013344")]
     result = dedupe.find_duplicates("party", rows)
     out = proposals.build_proposals(result, rows)
-    assert len(out) == 1 and "secret@private.example" not in repr(out)
+    assert out == [] and result["withheld_pairs"] == 1  # rules version 4, R3: the ordinary copy is not paired either

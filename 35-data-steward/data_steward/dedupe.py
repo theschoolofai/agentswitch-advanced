@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 from itertools import combinations
 
 # Bumped whenever a change can alter which pairs are found, their scores, bands or exclusions.
-RULES_VERSION = "3"
+RULES_VERSION = "4"
 
 PROPOSE, REVIEW = 0.9, 0.6
 BAND_ORDER = {"propose": 0, "review": 1}
@@ -276,6 +276,22 @@ def _score_item(_a, _b, ka, kb, oa, ob):
     return signals, conflicts, [], ITEM_WEIGHTS
 
 
+def _dummy_phone(phone: str) -> bool:
+    """One digit repeated in the last ten, such as "+91 0000000000": a placeholder, not a number."""
+    return bool(phone) and len(set(phone)) == 1
+
+
+# Rules version 4, R1. Without a customer code, only the same name with the same email or phone shows one party:
+# different names sharing contacts can be a household or one owner of two firms, and a website or a city is shared by
+# many. Added only to a pair that would otherwise propose, so no review pair's reason changes.
+NAME_AND_CONTACT = "name and contact not both shared"
+
+
+def _party_needs_name_and_contact(signals, caps) -> bool:
+    return (not caps and "customer_code" not in signals
+            and not ("name" in signals and ("email" in signals or "phone" in signals)))
+
+
 def _excluded_party(a, b) -> str | None:
     if flag(a.get("allow_duplicate")) or flag(b.get("allow_duplicate")):
         return "flagged as an allowed duplicate"
@@ -317,17 +333,22 @@ def find_duplicates(entity: str, rows: list[dict], test_tags=()) -> dict:
     """Every candidate pair of `rows`, scored and banded.
 
     entity: "party" or "item". test_tags: confirmed test-run tags (from local/, never hard-coded here).
-    Parties under a privacy state other than the ordinary one, or with none, are counted and left out before
-    grouping, so no detail of theirs reaches a pair. An excluded pair is listed with its reason only when it scored
+    Party rows under a privacy state other than the ordinary one, or with none, are counted and left out before
+    grouping. Any other copy of such an id still counts toward the shared and group limits, as in rules version 3, so
+    leaving it out cannot bring back a value or a group; every pair and exclusion touching the id is left out after
+    scoring, so no detail of it reaches the result. An excluded pair is listed with its reason only when it scored
     review or better: a low-scoring pair that is also excluded is just dropped.
     """
     if entity not in ("party", "item"):
         raise ValueError(f"unknown entity {entity!r}")
     withheld = repeated = 0
+    withheld_ids = set()
     by_id = {}
     for row in rows:
         if entity == "party" and row.get("privacy_state") != ORDINARY_PRIVACY:
             withheld += 1
+            if row.get("id") is not None:
+                withheld_ids.add(str(row["id"]))
             continue
         rid = str(row["id"])
         if rid in by_id:
@@ -340,6 +361,11 @@ def find_duplicates(entity: str, rows: list[dict], test_tags=()) -> dict:
         (_item_keys, _score_item, _excluded_item, ITEM_STRONG, ("code", "sku")))
     keys = {rid: key_fn(row, test_tags) for rid, row in by_id.items()}
     original = {rid: dict(k) for rid, k in keys.items()}
+    if entity == "party":
+        # R2: a dummy phone is no evidence and groups nothing, but the original copy keeps it as a conflict.
+        for k in keys.values():
+            if _dummy_phone(k["phone"]):
+                k["phone"] = ""
     ignored_shared = _drop_shared(keys, strong)
 
     candidates, skipped_blocks = _candidates(keys, block_on + ("name",))
@@ -350,6 +376,8 @@ def find_duplicates(entity: str, rows: list[dict], test_tags=()) -> dict:
         score = round(min(1.0, sum(weights[s] for s in signals)), 2)
         if conflicts:
             caps = [f"{c} differs" for c in conflicts] + caps
+        if entity == "party" and score >= PROPOSE and _party_needs_name_and_contact(signals, caps):
+            caps = caps + [NAME_AND_CONTACT]
         result = {
             "id": f"{entity}:{ida}:{idb}",
             "entity": entity,
@@ -369,13 +397,20 @@ def find_duplicates(entity: str, rows: list[dict], test_tags=()) -> dict:
             continue
         pairs.append(result)
 
+    # R3: an id with any withheld row reaches no pair or exclusion, whichever copy came first.
+    kept = [p for p in pairs if not withheld_ids & set(p["ids"])]
+    kept_excluded = [p for p in excluded if not withheld_ids & set(p["ids"])]
+    withheld_pairs = len(pairs) + len(excluded) - len(kept) - len(kept_excluded)
+    pairs, excluded = kept, kept_excluded
+
     in_pairs = Counter(rid for p in pairs for rid in p["ids"])
     for p in pairs:
         p["shared_record"] = any(in_pairs[rid] > 1 for rid in p["ids"])
     pairs.sort(key=lambda p: (BAND_ORDER[p["band"]], p["id"]))
     excluded.sort(key=lambda p: p["id"])
     return {"entity": entity, "rules_version": RULES_VERSION, "rows": len(rows), "withheld_private": withheld,
-            "repeated_ids": repeated, "ignored_shared": ignored_shared, "skipped_blocks": skipped_blocks,
+            "repeated_ids": repeated, "withheld_pairs": withheld_pairs, "ignored_shared": ignored_shared,
+            "skipped_blocks": skipped_blocks,
             "pairs": pairs, "excluded": excluded, "dropped": dropped}
 
 

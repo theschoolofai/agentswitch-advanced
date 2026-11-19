@@ -429,3 +429,147 @@ def test_a_test_tag_with_a_digit_is_stripped_before_numbers_are_split():
 def test_item_name_containment_needs_three_words_and_no_added_number(short, long_):
     rows = [item("i1", short, "A-1", category_id="k"), item("i2", long_, "B-2", category_id="k")]
     assert ("i1", "i2") not in pairs("item", rows)
+
+
+# Rules version 4 (plan, "Rules version 4"): each change is only stricter than version 3.
+
+R1_CAP = "name and contact not both shared"
+
+
+def test_r2_dummy_phone_with_a_country_code_still_conflicts():
+    # Required case 1: the dummy gives no evidence but still differs from a real phone.
+    rows = [party("p1", "Acme Traders", email="ops@acme.example", phone="+91 0000000000"),
+            party("p2", "Acme Traders", email="ops@acme.example", phone="+91 98765 43210")]
+    p = pairs("party", rows)[("p1", "p2")]
+    assert (p["band"], p["signals"], p["caps"]) == ("review", ["email", "name"], ["phone differs"])
+
+
+def test_r2_the_same_dummy_phone_is_no_evidence():
+    rows = [party("p1", "Asha Traders", phone="+91 0000000000"), party("p2", "Asha Traders", phone="+91-00000-00000")]
+    p = pairs("party", rows)[("p1", "p2")]
+    assert (p["score"], p["band"], p["signals"], p["caps"]) == (0.6, "review", ["name"], [])
+
+
+def test_r2_a_dummy_phone_does_not_group_records():
+    rows = [party("p1", "Olsen Plumbing", phone="+91 1111111111", website="olsen.example"),
+            party("p2", "Marlow Electric", phone="+91 1111111111", website="olsen.example")]
+    result = dedupe.find_duplicates("party", rows)
+    assert result["pairs"] == [] and result["dropped"] == 1  # the shared website still groups them
+
+
+@pytest.mark.parametrize("restricted_first", [True, False])
+def test_r3_a_withheld_copy_still_counts_toward_the_shared_limit(restricted_first):
+    # Required case 2: six ids hold the email, so it stays ignored after the withheld id is left out.
+    shared = "desk@hub.example"
+    copies = [party("p6", "Zeta Works", email=shared, privacy_state="restricted"),
+              party("p6", "Zeta Works", email=shared)]
+    rows = [party(f"p{i}", f"Firm {chr(70 + i)}{chr(80 + i)}{chr(75 + i)}", email=shared) for i in (3, 4, 5)]
+    rows += (copies if restricted_first else copies[::-1])
+    rows += [party("p1", "Mehta Stores", email=shared), party("p2", "Mehta Stores", email=shared)]
+    result = dedupe.find_duplicates("party", rows)
+    p = {tuple(x["ids"]): x for x in result["pairs"]}[("p1", "p2")]
+    assert (p["score"], p["band"], p["signals"]) == (0.6, "review", ["name"])
+    assert result["ignored_shared"] == {"email": 1}
+    assert all("p6" not in x["ids"] for x in result["pairs"] + result["excluded"])
+
+
+@pytest.mark.parametrize("restricted_first", [True, False])
+def test_r3_a_withheld_copy_still_counts_toward_the_group_limit(restricted_first):
+    # Required case 3: 51 ids share a name and its word, so both groups stay skipped.
+    rows = [party(f"p{i}", "Acme") for i in range(1, dedupe.BLOCK_LIMIT + 1)]
+    copies = [party("p51", "Acme", privacy_state="restricted"), party("p51", "Acme")]
+    rows += copies if restricted_first else copies[::-1]
+    result = dedupe.find_duplicates("party", rows)
+    assert result["pairs"] == [] and result["skipped_blocks"] == 2
+
+
+@pytest.mark.parametrize("restricted_first", [True, False])
+def test_r3_every_pair_and_exclusion_of_a_withheld_id_is_left_out(restricted_first):
+    # Required case 4: the ordinary copy of a withheld id is paired in version 3 and gone in version 4.
+    copies = [party("p1", "Lena Ortiz", email="l@ortiz.example", privacy_state="restricted"),
+              party("p1", "Lena Ortiz", email="l@ortiz.example")]
+    rows = (copies if restricted_first else copies[::-1]) + [
+        party("p2", "Lena Ortiz", email="l@ortiz.example"),
+        party("p3", "Lena Ortiz", email="l@ortiz.example", company_id="c2")]
+    result = dedupe.find_duplicates("party", rows)
+    assert result["pairs"] == [] and [e["ids"] for e in result["excluded"]] == [["p2", "p3"]]
+    assert result["withheld_pairs"] == 2 and result["withheld_private"] == 1 and result["repeated_ids"] == 0
+
+
+@pytest.mark.parametrize("restricted_first", [True, False])
+def test_r3_ids_are_compared_as_text_and_a_withheld_row_without_an_id_is_counted(restricted_first):
+    copies = [party(7, "Lena Ortiz", email="l@ortiz.example", privacy_state="restricted"),
+              party("7", "Lena Ortiz", email="l@ortiz.example")]
+    rows = (copies if restricted_first else copies[::-1]) + [
+        party("8", "Lena Ortiz", email="l@ortiz.example"), {"name": "No Id", "privacy_state": "restricted"}]
+    result = dedupe.find_duplicates("party", rows)
+    assert result["pairs"] == [] and result["withheld_private"] == 2 and result["withheld_pairs"] == 1
+
+
+def test_r3_shared_record_is_worked_out_from_the_pairs_that_remain():
+    rows = [party("p1", "Kite Co", email="k@kite.example"), party("p2", "Kite", email="k@kite.example"),
+            party("p3", "Kite Ltd", email="k@kite.example"), party("p4", "Kite", email="k@kite.example"),
+            party("p4", "Kite", privacy_state="restricted")]
+    found = pairs("party", rows)
+    assert set(found) == {("p1", "p2"), ("p1", "p3"), ("p2", "p3")}
+    assert all(p["shared_record"] for p in found.values())
+    two = pairs("party", rows[:2] + [party("p3", "Kite", email="k@kite.example", privacy_state="restricted"),
+                                     party("p3", "Kite", email="k@kite.example")])
+    assert [p["shared_record"] for p in two.values()] == [False]
+
+
+@pytest.mark.parametrize("a, b", [
+    ({"name": "Dana Whitcombe"}, {"name": "Ravi Whitcombe"}),  # a household: different names, email and phone
+    ({"name": "N/A"}, {"name": "Unknown"}),                    # placeholder names
+])
+def test_r1_different_or_blank_names_sharing_contacts_are_held_at_review(a, b):
+    shared = {"email": "home@whitcombe.example", "phone": "5552013344"}
+    p = pairs("party", [party("p1", a["name"], **shared), party("p2", b["name"], **shared)])[("p1", "p2")]
+    assert (p["score"], p["band"], p["caps"]) == (1.0, "review", [R1_CAP])
+
+
+def test_r1_same_name_website_and_city_without_a_contact_is_held_at_review():
+    address = [{"city": "Pune", "postal": "411001"}]
+    rows = [party("p1", "Kestrel Outfitters", website="https://shop.example/kestrel", addresses=address),
+            party("p2", "Kestrel Outfitters", website="shop.example/kestrel-2", addresses=address)]
+    p = pairs("party", rows)[("p1", "p2")]
+    assert (p["score"], p["band"], p["caps"]) == (0.95, "review", [R1_CAP])
+
+
+def test_r1_a_shared_customer_code_still_proposes_with_different_names():
+    rows = [party("p1", "Alpha One", customer_code="C-9", website="alpha.example"),
+            party("p2", "Beta Two", customer_code="C-9", website="alpha.example")]
+    p = pairs("party", rows)[("p1", "p2")]
+    assert (p["score"], p["band"], p["caps"]) == (0.9, "propose", [])
+
+
+def test_r1_a_contact_shared_too_widely_does_not_count():
+    rows = [party(f"p{i}", f"Shop {chr(65 + i)}{chr(70 + i)}{chr(75 + i)}", email="desk@hub.example")
+            for i in range(dedupe.SHARED_LIMIT - 1)]
+    rows += [party("p8", "Mehta Stores", email="desk@hub.example", customer_code="X1", website="mehta.example"),
+             party("p9", "Mehta Stores", email="desk@hub.example", website="mehta.example",
+                   addresses=[{"city": "Pune", "postal": "411001"}])]
+    rows[-2]["addresses"] = [{"city": "Pune", "postal": "411001"}]
+    p = pairs("party", rows)[("p8", "p9")]
+    assert (p["score"], p["signals"], p["band"], p["caps"]) == (0.95, ["website", "city_postal", "name"], "review",
+                                                                 [R1_CAP])
+
+
+def test_r1_adds_no_cap_to_a_pair_that_would_not_propose():
+    below = pairs("party", [party("p1", "Olsen Plumbing", phone="5552013344"),
+                            party("p2", "Olsen Plumbing", phone="5552013344", email="x@y.example"),
+                            party("p3", "Olsen Plumbing", website="olsen.example"),
+                            party("p4", "Marlow Electric", website="olsen.example", email="x@y.example")])
+    assert below[("p1", "p3")]["caps"] == []  # name alone: 0.6
+    held = pairs("party", [party("p1", "Summit Dental", email="a@summit.example", phone="5552010001"),
+                           party("p2", "Summit Dental", email="b@summit.example", phone="5552010001")])
+    assert held[("p1", "p2")]["caps"] == ["email differs"]
+    near = pairs("party", [party("p1", "Dana Whitcombe", email="f@w.example"),
+                           party("p2", "Dane Whitcombe", email="f@w.example")])
+    assert near[("p1", "p2")]["caps"] == ["names differ slightly"]
+
+
+def test_every_cap_the_matcher_can_hold_a_pair_with_has_wording():
+    from data_steward import report, results
+    assert R1_CAP in results.CAPS and R1_CAP in report.SAY
+    assert dedupe.RULES_VERSION == "4"

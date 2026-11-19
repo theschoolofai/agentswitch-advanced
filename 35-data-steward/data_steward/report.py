@@ -41,6 +41,8 @@ SAY = {
     "category": "category", "uom": "unit of measure",
     # held at review
     "names differ slightly": "similar names without a matching customer code", "roles differ": "different roles",
+    "name and contact not both shared":
+        "without a matching customer code, not the same name with the same email or phone",
     "customer_code differs": "different customer codes", "email differs": "different emails",
     "phone differs": "different phone numbers", "code differs": "different item codes", "sku differs": "different SKUs",
     # ruled out
@@ -120,8 +122,8 @@ def scan(client, entity: str, test_tags) -> dict:
     excluded = [{**p, "names": {rid: by_id[rid].get("name") for rid in p["ids"]}} for p in result["excluded"]]
     return {
         "table": {"rows": len(rows), "total": rows.total, "cut_off": rows.truncated},
-        "counts": {k: result[k] for k in ("withheld_private", "repeated_ids", "ignored_shared", "skipped_blocks",
-                                          "dropped")} | {"references_unreadable": unreadable},
+        "counts": {k: result[k] for k in ("withheld_private", "repeated_ids", "withheld_pairs", "ignored_shared",
+                                          "skipped_blocks", "dropped")} | {"references_unreadable": unreadable},
         "proposals": proposals.build_proposals(result, rows, refs),
         "excluded": excluded,
     }
@@ -341,6 +343,7 @@ def render_markdown(report: dict) -> str:
                   f"- Pairs below the review threshold, not listed: {c['dropped']}",
                   f"- Records withheld for privacy; details omitted: {c['withheld_private']}",
                   f"- Repeated record IDs; first copy kept: {c['repeated_ids']}",
+                  f"- Pairs left out because a record has a copy withheld for privacy: {c['withheld_pairs']}",
                   f"- Values shared too widely to count as evidence: {_shared(c['ignored_shared'])}",
                   f"- Groups not compared because they are too common: {c['skipped_blocks']}",
                   f"- Records whose linked-record counts could not be read: {c['references_unreadable']}", ""]
