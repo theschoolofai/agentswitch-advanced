@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from eval_harness.recount import recount
 from eval_harness.trial import GONE, TrialRecord
 from eval_harness.recount import recount
 
