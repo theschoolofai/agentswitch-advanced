@@ -22,6 +22,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from eval_harness.platform import Me, PlatformError, PlatformReader
+from eval_harness.rules import RULES, Population, Rule
 from eval_harness.settings import MODEL_VARIABLES, OPTIONAL_MODEL_VARIABLES, HarnessSettings
 from eval_harness.suite import Suite, Task
 
@@ -74,6 +75,7 @@ class TrialRecord(BaseModel):
     before: dict[str, dict[str, Any] | None] = {}  # record id -> row (None: could not read)
     after: dict[str, dict[str, Any] | None] = {}
     writes_since_start: dict[str, list[dict[str, Any]] | None] = {}  # entity -> rows written by our login
+    population: dict[str, Population] = {}  # recount answer name -> rows its rule needs (rules.py)
     agent: AgentRun | None = None
     infrastructure: str | None = None  # set when the trial could not run fairly
 
@@ -108,6 +110,37 @@ def entities_to_watch(task: Task) -> list[str]:
     for spec in task.graders:
         names += [str(e) for e in spec.params.get("entities", [])]
     return sorted(set(names))
+
+
+def answers_to_capture(task: Task) -> list[str]:
+    """Answer names of the task's recount graders that have a rule (an unknown name is graded unevaluated)."""
+    names = [str(s.params.get("answer", "")) for s in task.graders if s.name == "recount"]
+    return sorted({n for n in names if n in RULES})
+
+
+async def _read_rows(platform: PlatformReader, rule: Rule) -> list[dict[str, Any]] | None:
+    try:
+        rows = await platform.list_all(rule.entity)
+    except PlatformError:
+        return None  # could not check; never an empty list, which would look like "no orders"
+    return [{f: row.get(f) for f in rule.fields} for row in rows]
+
+
+async def capture_before(platform: PlatformReader, task: Task, as_of: datetime) -> dict[str, Population]:
+    """Rows each recount answer needs, read just before the agent starts (only the rule's fields)."""
+    captured: dict[str, Population] = {}
+    for name in answers_to_capture(task):
+        rule = RULES[name]
+        captured[name] = Population(entity=rule.entity, as_of=as_of, before=await _read_rows(platform, rule))
+    return captured
+
+
+async def capture_after(platform: PlatformReader, before: dict[str, Population]) -> dict[str, Population]:
+    """The same rows read again after the agent ran (live data can move during a run)."""
+    return {
+        name: pop.model_copy(update={"after": await _read_rows(platform, RULES[name])})
+        for name, pop in before.items()
+    }
 
 
 GONE: dict[str, Any] = {"_harness": "not_found"}  # the platform said 404: the record is gone
@@ -259,11 +292,13 @@ async def run_trial(
             return record
         record.before = await snapshot(platform, task.targets.entity, record.targets)
     record.started_at = (await platform.whoami()).server_time
+    record.population = await capture_before(platform, task, record.started_at)
     command = [*shlex.split(suite.agent), "--prompt", task.render_prompt(record.targets)]
     record.agent = await run_agent(command, agent_environment(settings, run_id), suite.task_minutes * 60)
     record.infrastructure = infrastructure_problem(record.agent)
     if task.targets:
         record.after = await snapshot(platform, task.targets.entity, record.targets)
+    record.population = await capture_after(platform, record.population)
     for entity in entities_to_watch(task):
         try:
             record.writes_since_start[entity] = await writes_by(

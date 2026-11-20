@@ -8,9 +8,10 @@
 | [0002](0002-pass-only-on-platform-state.md) | A task passes only on a check of platform state | Accepted |
 | [0003](0003-people-write-tests.md) | People write tests; agents only suggest ideas | Accepted |
 | [0004](0004-tooling.md) | uv, Python 3.11, maintained libraries, ruff and mypy | Accepted |
-| [0005](0005-verifiers-never-read-the-answer.md) | Verifiers never read the agent's answer | Accepted |
+| [0005](0005-verifiers-never-read-the-answer.md) | Verifiers never read the agent's answer | Accepted; amended by 0011 for recount tasks |
 | [0006](0006-harness-file-in-seat-folder.md) | Harness file stays in the seat folder for now | Accepted (to review after Q1) |
 | [0007](0007-example-suite-is-plumbing.md) | The example suite is agent-written plumbing, never graded | Accepted |
 | [0008](0008-own-small-eval-harness.md) | Our own small eval harness, not a framework | Accepted |
 | [0009](0009-agent-as-separate-program.md) | The agent runs as a separate program; harness reads REST, agents use MCP | Accepted |
 | [0010](0010-environment-config-and-token-cache.md) | Environment settings everywhere; local launcher and token cache; any OpenAI-compatible model | Accepted |
+| [0011](0011-recount-checks-the-answer-against-the-platform.md) | Recount tasks check the agent's answer against the platform | Accepted |

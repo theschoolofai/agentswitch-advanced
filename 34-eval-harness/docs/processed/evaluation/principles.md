@@ -10,6 +10,8 @@ An agent can say "done" and be wrong. Our verifier never reads the agent's reply
 
 Records the agent created are found from the platform itself: the audit trail, or `created_by` combined with the trial's start time. They are never found from ids the agent reports. If a task's result never lands on the platform, nothing can be checked and the verdict is **unevaluated**.
 
+**One exception, recount tasks (decision 0011).** When the answer is the work, the agent states a list of record ids in its `AGENT_RESULT` line, and we check that list against ids we pick ourselves from platform rows saved before and after the run. The truth still comes from the platform; the agent's words are checked, never trusted.
+
 ## 2. Three verdicts, and "unevaluated" is never a pass
 | Verdict | Meaning |
 |---|---|

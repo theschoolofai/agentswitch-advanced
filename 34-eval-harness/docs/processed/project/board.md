@@ -4,7 +4,7 @@
 
 **Owners marked "(proposed)" are only suggestions.** Nothing has been agreed yet. The team will settle them together at the first meeting, and then the "(proposed)" labels come off.
 
-Card format: `S34-NN | title | owner | milestone`. A card on this board already has its number. A new card takes the next free number (**S34-36** at the moment), claimed in the title of the pull request that adds it. Never reuse a number.
+Card format: `S34-NN | title | owner | milestone`. A card on this board already has its number. A new card takes the next free number (**S34-37** at the moment), claimed in the title of the pull request that adds it. Never reuse a number.
 
 **Never delete a card, for traceability.** Every number from S34-01 up to the last one claimed stays on this board, exactly once. A card only moves between sections. A finished card goes to Done. A card merged into another, or no longer needed, goes to Done or Dropped with a one-line note saying why and which card took it over. To change a card, update its line in place; git history keeps the old wording.
 
@@ -36,6 +36,7 @@ Card format: `S34-NN | title | owner | milestone`. A card on this board already 
 - S34-17 | Verify the bug drafts in `docs/bugs/reports/` (BUG-34-001 to BUG-34-003), then file the real ones (BUG-34-003 narrowed on 10 Nov to what is still refused; a seat-group question may replace it) | Krishna | M0
 
 ## Doing
+- S34-36 | Recount support: the trial saves the rows a recount rule needs before and after the agent (`TrialRecord.population`), first rule `orders_not_invoiced` (seat 31's written rule), `answer` in the agent contract, decision 0011. The recount grader itself is Ranjani's (instructor, 18 Nov) | Abhinav | M2
 - S34-01 | Seat foundations: `.gitignore`, uv project, wiki, plan, `AGENTS.md` (written; in PR #18, waiting for review) | Krishna | M0
 - S34-02 | Live access probe (`scripts/probe_access.py`) and access map (written; ships in the same PR) | Krishna | M0
 - S34-18 | Platform sync script and bug workflow (`scripts/platform_sync.py`, `docs/bugs/`) (written; ships in the same PR) | Krishna | M0

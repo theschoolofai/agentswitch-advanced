@@ -67,6 +67,7 @@ uv run python -m eval_harness.calibrate --suite suites/seat31 --real runs/<real_
 - `manifest`: everything that can change a score (git commit, task version, graders, agent command, model);
 - `targets`, `before`, `after`: the snapshots;
 - `writes_since_start`;
+- `population`: for recount tasks, the rows each answer rule needs, read before and after the agent (`eval_harness/rules.py`);
 - `agent`: exit code, seconds, the tail of its output, and its `AGENT_RESULT` line;
 - `infrastructure`: why the trial could not run fairly, if it couldn't.
 

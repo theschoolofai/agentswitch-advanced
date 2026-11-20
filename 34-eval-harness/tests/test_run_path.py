@@ -23,7 +23,7 @@ import eval_harness.__main__ as harness
 from eval_harness.platform import PlatformReader
 from eval_harness.scorer import row_for, score_trial
 from eval_harness.settings import MODEL_VARIABLES, OPTIONAL_MODEL_VARIABLES, SettingsMissing, load_settings
-from eval_harness.suite import Suite, Task, load_suite
+from eval_harness.suite import GraderSpec, Suite, Task, load_suite
 from eval_harness.trial import SYSTEM_VARIABLES, TrialRecord, agent_environment, run_agent
 
 SEAT = Path(__file__).resolve().parent.parent
@@ -67,6 +67,9 @@ class FakePlatform:
         entity, _, record_id = path.removeprefix("/api/").partition("/")
         if entity == self.broken_entity:
             return httpx2.Response(500, json={"detail": "fake server error"})
+        if entity == "SalesOrder" and not record_id:  # rows for the recount capture
+            orders = [{"id": "so-1", "docstatus": 1, "invoiced_status": "unbilled", "date": "2026-10-01"}]
+            return httpx2.Response(200, json={"data": orders, "total": len(orders)})
         if entity != "Party":
             return httpx2.Response(404, json={"detail": "no such entity"})
         if record_id:
@@ -227,6 +230,22 @@ def test_a_failed_read_in_one_task_does_not_stop_the_next(platform: FakePlatform
     rows = run(suite_with("ok", tasks=[broken, good]), tmp_path)
     assert rows[0]["evidence"].startswith("infrastructure: harness error: PlatformError")
     assert rows[1]["passed"] is True
+
+
+def test_recount_task_saves_the_rows_before_and_after_the_agent(
+    platform: FakePlatform, tmp_path: Path
+) -> None:
+    good = load_suite(SEAT / "suites" / "example").tasks[0]
+    spec = GraderSpec(name="recount", answer="orders_not_invoiced", days=7)
+    recount = good.model_copy(update={"id": "example.recount", "graders": [*good.graders, spec]})
+    run(suite_with("ok", tasks=[recount]), tmp_path)
+    pop = saved_record(tmp_path, "example.recount")["population"]["orders_not_invoiced"]
+    assert pop["entity"] == "SalesOrder" and pop["as_of"]
+    assert (
+        pop["before"]
+        == pop["after"]
+        == [{"id": "so-1", "docstatus": 1, "invoiced_status": "unbilled", "date": "2026-10-01"}]
+    )
 
 
 def test_main_without_settings_still_writes_results(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
