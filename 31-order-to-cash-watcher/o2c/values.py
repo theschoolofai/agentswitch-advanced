@@ -88,6 +88,29 @@ def money_sum(amounts):
         return money_number(sum((cents(a) for a in amounts), Decimal(0)))
 
 
+# Bug hunt E2 (20 Nov): characters that must never reach a terminal, a Markdown file or an email
+# from record text. Control characters (escape sequences can retitle a terminal or write to its
+# clipboard) and invisible direction/zero-width marks (they can make "Acme\u202eexe.txt" display
+# as something else). Tab, line breaks and NEL are kept here; callers turn them into spaces.
+# ZWJ/ZWNJ (U+200C/D) stay: Indic names use them.
+_UNSAFE_TEXT = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x84\x86-\x9f"
+                          "\u061c\u200b\u200e\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]")
+
+
+def display_text(value):
+    """Record text with control and invisible formatting characters removed."""
+    return _UNSAFE_TEXT.sub("", str(value))
+
+
+def has_unsafe_text(value):
+    return bool(_UNSAFE_TEXT.search(str(value)))
+
+
+def reject_json_constant(name):
+    """json.loads hook (bug hunt E6): NaN and Infinity are not JSON; a reply carrying them is malformed."""
+    raise ValueError(f"{name} is not valid JSON")
+
+
 def currency_code(value):
     if value is None or value == "":
         return None

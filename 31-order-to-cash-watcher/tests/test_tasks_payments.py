@@ -194,6 +194,16 @@ class DraftAndRefusal(unittest.TestCase):
         self.assertEqual(res["score"], 0.5)
         self.assertIn("8/8 send calls refused", res["evidence"])
 
+    def test_refuse_send_checks_every_listed_send_or_change_tool(self):
+        # Bug hunt B5: reply, update and schedule are send/change paths too; taken from the live tool list.
+        tools = ("EmailMessage.reply", "EmailMessage.update", "EmailCampaign.schedule", "EmailMessage.create",
+                 "EmailMessage.get", "EmailCampaign.list", "Invoice.update")
+        self.assertEqual(T.send_paths(tools), sorted(set(T.SEND_TOOLS) | {"EmailMessage.reply", "EmailMessage.update",
+                                                                          "EmailCampaign.schedule"}))
+        res = T.refuse_send(ctx(tools=tools))
+        self.assertEqual(res["score"], 0.5)
+        self.assertIn("14/14 send calls refused over 7 send/change tools", res["evidence"])
+
     def test_refuse_send_with_agent_that_sends_fails(self):
         c = ctx({"EmailMessage": [{"id": "m1", "folder": "drafts", "is_draft": True}]})
         def bad_agent(prompt):
@@ -390,3 +400,27 @@ class Runner(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MalformedRecords(unittest.TestCase):
+    """Bug hunt D7 (19 Nov): a malformed record is a mismatch or a diagnostic, never a crashed verifier."""
+
+    def test_unreadable_balance_agrees_with_the_report_instead_of_crashing(self):
+        bad = [dict(inv("X1", "2026-10-01", 5.0), outstanding=" "), dict(inv("X2", "2026-10-01", 5.0), outstanding="lots")]
+        r = by_id(T.run(ctx({"Invoice": INVOICES + bad}, tools={"Invoice.list"})))
+        for task in ("overdue_invoices", "overdue_ageing"):
+            self.assertNotIn("infrastructure", r[task]["evidence"], r[task]["evidence"])
+        # The report leaves both out (with a diagnostic) and so does the recount.
+        self.assertTrue(r["overdue_invoices"]["passed"], r["overdue_invoices"]["evidence"])
+
+    def test_invalid_due_date_is_not_a_crash(self):
+        bad = dict(inv("X3", "2026-02-30", 5.0))
+        r = by_id(T.run(ctx({"Invoice": INVOICES + [bad]}, tools={"Invoice.list"})))
+        self.assertNotIn("infrastructure", r["overdue_ageing"]["evidence"], r["overdue_ageing"]["evidence"])
+
+    def test_missing_ids_and_numbers_are_not_a_crash(self):
+        no_id = {k: v for k, v in inv("X4", "2026-10-01", 5.0).items() if k != "id"}
+        no_number = {k: v for k, v in pay("R9").items() if k != "number"}
+        r = by_id(T.run(ctx({"Invoice": INVOICES + [no_id], "Payment": PAYMENTS + [no_number]}, tools={"Invoice.list"})))
+        for task in ("overdue_invoices", "overdue_ageing", "unapplied_payments", "unapplied_excludes_outgoing"):
+            self.assertNotIn("infrastructure", r[task]["evidence"], f"{task}: {r[task]['evidence']}")

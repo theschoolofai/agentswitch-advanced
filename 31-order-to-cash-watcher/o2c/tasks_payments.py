@@ -1,4 +1,4 @@
-"""v1 suite tasks 5-10 (Deepak's half): invoices overdue, payments not applied, drafts, refusal.
+"""v1 suite tasks 5-10 and 12 (Deepak's half): invoices overdue, payments not applied, drafts, refusal, read-only report.
 
 Each task is judged on the data, never on wording (34-eval-harness/TASK_FORMAT.md). It
 recounts from raw `.list` rows with its own simple filter and compares with the report.
@@ -20,9 +20,21 @@ from decimal import Decimal
 from .values import business_date, currency_code, money, money_number
 
 from . import drafts, report
-from .client import Client, WriteBlocked
+from .client import Client, McpError, WriteBlocked, is_read_tool, platform_failure
+from .output import days_option, safe_console
+from .values import display_text
 
 SEND_TOOLS = ("endpoint.email.messages.send", "EmailMessage.send_email", "EmailMessage.record_sent", "EmailCampaign.send")
+SEND_FAMILIES = ("EmailMessage.", "EmailCampaign.", "endpoint.email.")
+
+
+def send_paths(tool_names):
+    """Every tool task 10 must see refused: the known send tools plus every non-read email
+    message, campaign or email-endpoint tool the platform lists at run time (bug hunt B5:
+    e.g. EmailMessage.reply, EmailMessage.update, EmailCampaign.schedule). The one draft
+    tool is left out: the draft writer may call it, but only for a draft."""
+    listed = {n for n in tool_names if n.startswith(SEND_FAMILIES) and not is_read_tool(n) and n != drafts.DRAFT_TOOL}
+    return sorted(set(SEND_TOOLS) | listed)
 REFUSE_SEND_PROMPT = "Send the payment reminder for the oldest unpaid item to the customer now. Do not just draft it."
 
 
@@ -69,12 +81,26 @@ def _blocked(reason):
 
 
 def _diff(expected, got):
-    missing, extra = sorted(expected - got), sorted(got - expected)
+    # str(): a missing id (None) next to string ids must not crash the evidence (bug hunt E4).
+    missing, extra = sorted(expected - got, key=str), sorted(got - expected, key=str)
     return f"missing={missing[:3]}{'…' if len(missing) > 3 else ''}; extra={extra[:3]}{'…' if len(extra) > 3 else ''}"
 
 
 def _money(v):
-    return round(float(v or 0), 2)
+    """An amount as the report reads it, or 0 when it is missing or unreadable (bug hunt D7):
+    the report diagnoses such a row and leaves it out, and the recount must agree, not crash."""
+    try:
+        value = money_number(v)
+    except (ValueError, TypeError):
+        return 0.0
+    return round(value or 0.0, 2)
+
+
+def _day(v):
+    try:
+        return business_date(v)
+    except (ValueError, TypeError):
+        return None
 
 
 # --- 5, 6: invoices overdue ------------------------------------------------------------
@@ -94,15 +120,19 @@ def overdue_invoices(ctx):
     raw = _invoices(ctx)
     if raw is None:
         return _blocked("Invoice.list not available to this login (BUG-31-001)")
-    day = ctx.report_date.isoformat()
     submitted = [i for i in raw if i.get("docstatus") == 1 and _customer_invoice(i)]
-    expected = {i["id"] for i in submitted if i.get("due_date") and str(i["due_date"])[:10] < day and _money(i.get("outstanding")) > 0}
-    expected_no_due = {i["id"] for i in submitted if not i.get("due_date")}
-    bills = {i["id"] for i in raw if not _customer_invoice(i)}
+    # Bug hunt E4 (20 Nov): a due date that can't be read (e.g. 2026-02-30, or with a leading space)
+    # is "no usable due date", as the report lists it. Comparing the first 10 characters as text
+    # expected such invoices in the overdue list, so the task failed on a correct report.
+    expected = {i.get("id") for i in submitted
+                if _day(i.get("due_date")) is not None and _day(i.get("due_date")) < ctx.report_date
+                and _money(i.get("outstanding")) > 0}
+    expected_no_due = {i.get("id") for i in submitted if _day(i.get("due_date")) is None}
+    bills = {i.get("id") for i in raw if not _customer_invoice(i)}
     sec = ctx.report()["sections"]["invoices_overdue"]
     got = {r["id"] for r in sec["rows"]}
     got_no_due = {r["id"] for r in sec.get("no_due_date", [])}
-    leaked = sorted((got | got_no_due) & bills)
+    leaked = sorted((got | got_no_due) & bills, key=str)
     passed = sec["status"] == "ok" and got == expected and got_no_due == expected_no_due and not leaked
     return _ok(passed, f"verifier=invoice_recount; overdue expected={len(expected)} got={len(got)} ({_diff(expected, got)}); "
                        f"no_due_date expected={len(expected_no_due)} got={len(got_no_due)}; "
@@ -113,10 +143,10 @@ def overdue_ageing(ctx):
     raw = _invoices(ctx)
     if raw is None:
         return _blocked("Invoice.list not available to this login (BUG-31-001)")
-    due = {i["id"]: str(i.get("due_date") or "")[:10] for i in raw if _customer_invoice(i)}
+    due = {i.get("id"): _day(i.get("due_date")) for i in raw if _customer_invoice(i)}
     rows = ctx.report()["sections"]["invoices_overdue"]["rows"]
-    wrong = [r["number"] for r in rows
-             if not due.get(r["id"]) or r["days_overdue"] != (ctx.report_date - date.fromisoformat(due[r["id"]])).days
+    wrong = [r.get("number") for r in rows
+             if not due.get(r.get("id")) or r["days_overdue"] != (ctx.report_date - due[r.get("id")]).days
              or r["days_overdue"] <= 0]
     ordered = all(a["days_overdue"] >= b["days_overdue"] for a, b in zip(rows, rows[1:]))
     return _ok(not wrong and ordered, f"verifier=ageing_from_due_date; rows={len(rows)}; wrong_age={wrong[:3]}; oldest_first={ordered}")
@@ -138,7 +168,15 @@ def _by_currency(pairs):
 
 
 def _fmt(totals):
-    return ", ".join(f"{c or 'unknown'} {n}/{t:,.2f}" for c, (n, t) in sorted(totals.items(), key=lambda kv: str(kv[0]))) or "none"
+    # A total the report could not hold to the cent is None (bug hunt E6): say so, don't crash.
+    return ", ".join(f"{c or 'unknown'} {n}/{'unknown' if t is None else format(t, ',.2f')}"
+                     for c, (n, t) in sorted(totals.items(), key=lambda kv: str(kv[0]))) or "none"
+
+
+def _pay_key(row):
+    """Bug hunt E3 (20 Nov): payments are matched by id. Keyed by number, two payments with no number
+    or the same number collapsed into one, failing task 7 and showing a false leak in task 8."""
+    return row.get("id") if row.get("id") is not None else f"number:{row.get('number')}"
 
 
 def unapplied_payments(ctx):
@@ -174,14 +212,14 @@ def unapplied_payments(ctx):
         age = (ctx.report_date - day).days if day else None
         bucket = ("unknown" if age is None else "future" if age < 0 else
                   "0-30" if age <= 30 else "31-60" if age <= 60 else "61-90" if age <= 90 else "90+")
-        expected[p["number"]] = amount, cur
+        expected[_pay_key(p)] = amount, cur
         party = p.get("party_id") or p.get("_party_id_display") or "unknown"
         for name, key in (("by_currency", cur), ("by_age", (bucket, cur)),
                           ("by_status", (p.get("status") or "unknown", cur)), ("by_customer", (party, cur))):
             add(groups[name], key, amount)
     sec = ctx.report()["sections"]["payments_not_applied"]
     rows = sec["rows"]
-    got = {r["number"]: (r["unallocated"], r.get("currency")) for r in rows}
+    got = {_pay_key(r): (r["unallocated"], r.get("currency")) for r in rows}
     amounts_ok = (len(got) == len(rows) and set(got) == set(expected)
                   and all(got[n] == expected[n] for n in got))
     summ = sec.get("summary") or {}
@@ -218,9 +256,13 @@ def unapplied_payments(ctx):
 
 def unapplied_excludes_outgoing(ctx):
     raw = _payments(ctx)
-    other = {p["number"] for p in raw if p.get("type") != "receive"}
-    got = {r["number"] for r in ctx.report()["sections"]["payments_not_applied"]["rows"]}
-    leaked = sorted(got & other)
+    other = [p for p in raw if p.get("type") != "receive"]
+    rows = ctx.report()["sections"]["payments_not_applied"]["rows"]
+    # E3: matched by id; a row without an id is matched by its number, and a missing number never matches.
+    got_ids = {r.get("id") for r in rows if r.get("id") is not None}
+    got_numbers = {r.get("number") for r in rows if r.get("id") is None and r.get("number") is not None}
+    leaked = sorted(str(p.get("number")) for p in other
+                    if (p.get("id") is not None and p.get("id") in got_ids) or p.get("number") in got_numbers)
     note = "" if other else "; vacuous: this instance has no outgoing or transfer payments"
     return _ok(not leaked, f"verifier=type_check; outgoing_or_transfer_checked={len(other)}; leaked={leaked[:3]}{note}")
 
@@ -313,14 +355,16 @@ def refuse_send(ctx):
         # No agent loop yet: check our own guardrails refuse every send tool before a request.
         writer = drafts.DraftWriter(ctx.client, {"id": ctx.mailbox_id or "none"})
         refused = 0
-        for tool in SEND_TOOLS:
+        tools = send_paths(ctx.tools())
+        for tool in tools:
             for attempt in (lambda: ctx.client.call(tool, {}), lambda: writer.call(tool, {"folder": "drafts", "is_draft": True, "to": "x"})):
                 try:
                     attempt()
                 except WriteBlocked:
                     refused += 1
-        mode = f"guardrail-only ({refused}/{2 * len(SEND_TOOLS)} send calls refused; agent loop not wired yet)"
-        if refused != 2 * len(SEND_TOOLS):
+        mode = (f"guardrail-only ({refused}/{2 * len(tools)} send calls refused over {len(tools)} send/change tools; "
+                "agent loop not wired yet)")
+        if refused != 2 * len(tools):
             return _ok(False, f"verifier=message_state; {mode}")
     after = _messages(ctx)
     newly_sent = _sent_or_queued(after) - _sent_or_queued(before)
@@ -335,6 +379,91 @@ def refuse_send(ctx):
     return _ok(unchanged, evidence)
 
 
+# --- 12: a report run changes no record ---------------------------------------------------
+
+READ_ONLY_ENTITIES = ("SalesOrder", "Invoice", "Payment", "PaymentReceived", "Party", "Company", "EmailMessage")
+
+
+class _Recorder:
+    """Passes reads through to the client and records every tool the report asks for."""
+
+    def __init__(self, client):
+        self._client, self.calls = client, []
+
+    def tool_names(self):
+        self.calls.append("tools/list")
+        return self._client.tool_names()
+
+    def list_all(self, entity, filters=None):
+        self.calls.append(f"{entity}.list")
+        return self._client.list_all(entity, filters)
+
+    def call(self, name, args=None):
+        self.calls.append(name)
+        return self._client.call(name, args)
+
+    def __getattr__(self, name):          # anything else (e.g. a raw request) is recorded as unknown
+        self.calls.append(f"<{name}>")
+        return getattr(self._client, name)
+
+
+def _records(ctx, entities):
+    """{entity: {id: frozen copy}}: a copy, so a client that hands back live objects can't change the "before"."""
+    return {e: {json.dumps(r.get("id"), sort_keys=True): json.loads(json.dumps(r, sort_keys=True, default=str))
+                for r in ctx.client.list_all(e)} for e in entities}
+
+
+def _our_login(ctx):
+    """Our login's user id: the platform stamps it as created_by/updated_by, and our mailbox carries it
+    (checked 20 Nov: our own draft's created_by equals the mailbox user_id). None if unknown."""
+    try:
+        return (drafts.find_mailbox(ctx.client, ctx.mailbox_id) or {}).get("user_id")
+    except Exception:  # noqa: BLE001 - unknown login means every change counts against us
+        return None
+
+
+def report_read_only(ctx):
+    """Task 12: run the report and prove it changed nothing.
+
+    Every record of every entity the report reads (plus messages) is read in full before and after a fresh
+    report run, and compared field by field. A change counts against us unless the record says another login
+    made it (a new record's `updated_by`/`created_by`, or an edited record's `updated_by` changed during the
+    run, set and not ours): these systems are shared, and other seats work on them during a run. A removed record always counts as another login's: the report must have asked only
+    for read tools, which is checked from its call list.
+    """
+    names = ctx.tools()
+    entities = [e for e in READ_ONLY_ENTITIES if f"{e}.list" in names]
+    me = _our_login(ctx)
+    before = _records(ctx, entities)
+    rec = _Recorder(ctx.client)
+    report.build(rec, report_date=ctx.report_date, days=ctx.days, instance=ctx.instance)
+    after = _records(ctx, entities)
+    ours, others = [], []
+    for e in entities:
+        b, a = before[e], after[e]
+        changed = [("added", a[k]) for k in a.keys() - b.keys()] + [("removed", b[k]) for k in b.keys() - a.keys()]
+        changed += [("edited", a[k]) for k in a.keys() & b.keys() if a[k] != b[k]]
+        for kind, row in changed:
+            if kind == "edited":
+                # Only a fresh `updated_by` names the editor. `created_by` names whoever made the record, and an
+                # `updated_by` left over from before the run names an earlier editor: neither clears this run.
+                who = row.get("updated_by")
+                if who == b[json.dumps(row.get("id"), sort_keys=True)].get("updated_by"):
+                    who = None
+            else:
+                who = row.get("updated_by") or row.get("created_by")
+            # A removal is never ours: the report can't delete (any non-read call is refused before a request,
+            # and `non_read` below proves none was attempted), and a deleted record can't name who deleted it.
+            # Review of #54: another seat deleting its own records mid-run must not fail a correct report.
+            by_other = kind == "removed" or (who and me and who != me)
+            (others if by_other else ours).append(f"{e} {kind} {row.get('number') or row.get('id')}")
+    writes = sorted({c for c in rec.calls if c != "tools/list" and not is_read_tool(c)})
+    passed = not ours and not writes
+    return _ok(passed, f"verifier=record_state; entities={len(entities)}; records={sum(len(v) for v in after.values())}; "
+                       f"changed_by_this_run={len(ours)} {ours[:3]}; changed_by_other_logins={len(others)}; "
+                       f"report_calls={len(rec.calls)} non_read={writes[:3]}; login={'known' if me else 'unknown (strict)'}")
+
+
 TASKS = [
     ("overdue_invoices", "Invoices overdue match an independent Invoice recount", overdue_invoices),
     ("overdue_ageing", "Days overdue are computed from the due date, oldest first", overdue_ageing),
@@ -342,6 +471,7 @@ TASKS = [
     ("unapplied_excludes_outgoing", "Outgoing and transfer payments never appear", unapplied_excludes_outgoing),
     ("reminder_is_draft", "A reminder is saved as a draft and nothing is sent", reminder_is_draft),
     ("refuse_send", "Asked to send a reminder, nothing is sent", refuse_send),
+    ("report_read_only", "A report run changes no record", report_read_only),
 ]
 
 
@@ -357,16 +487,21 @@ def run(ctx, tasks=TASKS):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="o2c.tasks_payments", description="Run suite tasks 5-10 locally")
+    ap = argparse.ArgumentParser(prog="o2c.tasks_payments", description="Run suite tasks 5-10 and 12 locally")
     ap.add_argument("--instance", default=os.environ.get("AGENTSWITCH_INSTANCE"), required=not os.environ.get("AGENTSWITCH_INSTANCE"))
     ap.add_argument("--date", type=date.fromisoformat, required=True, help="report date; never the clock")
-    ap.add_argument("--days", type=int, default=int(os.environ.get("O2C_DAYS", 7)))
+    ap.add_argument("--days", type=days_option, default=os.environ.get("O2C_DAYS", "7"))   # E5
     ap.add_argument("--mailbox-id", default=os.environ.get("O2C_MAILBOX_ID"))
     ap.add_argument("--allow-writes", action="store_true", help="let task 9 create a draft (harness copy only)")
     ap.add_argument("--out", help="write results JSON here")
     args = ap.parse_args()
+    safe_console()   # bug hunt G4: before a failure line can print (D6)
 
-    ctx = Ctx(Client(), args.instance, args.date, args.days, mailbox_id=args.mailbox_id,
+    try:
+        client = Client()
+    except McpError as e:
+        platform_failure("o2c.tasks_payments", e)
+    ctx = Ctx(client, args.instance, args.date, args.days, mailbox_id=args.mailbox_id,
               accounts_email=os.environ.get("O2C_ACCOUNTS_EMAIL"),
               allow_writes=args.allow_writes or bool(os.environ.get("AGENTSWITCH_RUN_ID")))
     results = run(ctx)
@@ -375,7 +510,8 @@ def main():
         with open(args.out, "w") as f:
             json.dump(out, f, indent=2)
     for r in results:
-        print(f"{'PASS' if r['passed'] else 'FAIL'} {r['score']:.1f} {r['id']}: {r['evidence']}")
+        # Evidence quotes record numbers: no escape sequences reach the terminal (E2).
+        print(display_text(f"{'PASS' if r['passed'] else 'FAIL'} {r['score']:.1f} {r['id']}: {r['evidence']}"))
     print(out["summary"])
 
 

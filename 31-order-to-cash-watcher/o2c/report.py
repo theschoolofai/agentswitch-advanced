@@ -2,9 +2,10 @@
 
 The rules are pure functions over rows so they can be tested without the platform.
 """
+import re
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from .values import business_date, money, money_number, money_text, money_sum, currency_code
+from .values import business_date, display_text, money, money_number, money_text, money_sum, currency_code
 
 from . import receipts as receipts_mod
 
@@ -14,7 +15,13 @@ CANCELLED = 2
 NOT_INVOICED = ("unbilled", "partially_invoiced")
 RECEIVABLE = "receivable"
 PARTIALLY_PAID = "partially paid"
-FIXTURE_MARKERS = ("test", "harness", "fixture")
+# Bug hunt B4 (12 Nov): outstanding = grand_total - amount_paid - credits_applied on every live
+# invoice. One reduced by a credit note but with no money received is not "unpaid".
+PARTIALLY_CREDITED = "partially credited"
+FIXTURE_MARKERS = ("test", "tests", "testing", "harness", "fixture", "fixtures", "rt33")
+# Whole words only (bug hunt C2, 19 Nov): "Greatest Traders" is not test data, and seat 33 tags
+# every record it plants with "[RT33]".
+_FIXTURE_RE = re.compile(r"\b(?:" + "|".join(FIXTURE_MARKERS) + r")\b")
 ORDER_AGE_BUCKETS = ("0-7", "8-14", "15-30", "31-60", ">60")
 AGE_BUCKETS = (("future", None, -1), ("0-30", 0, 30), ("31-60", 31, 60), ("61-90", 61, 90), ("90+", 91, None))
 
@@ -25,7 +32,7 @@ def today_ist():
 
 def looks_like_fixture(row):
     text = " ".join(str(row.get(k) or "") for k in ("_party_id_display", "notes", "_deal_id_display")).lower()
-    return any(m in text for m in FIXTURE_MARKERS)
+    return bool(_FIXTURE_RE.search(text))
 
 
 UNKNOWN_CURRENCY = "currency not recorded"
@@ -285,7 +292,14 @@ def payments_summary(rows):
     def add(table, key, row):
         t = table.setdefault(key, {"count": 0, "unallocated": 0.0})
         t["count"] += 1
-        t["unallocated"] = money_sum([money(t["unallocated"]), money(row["unallocated"])])
+        if t["unallocated"] is None:
+            return
+        try:
+            t["unallocated"] = money_sum([money(t["unallocated"]), money(row["unallocated"])])
+        except ValueError:
+            # Bug hunt E6: a sum beyond what a JSON number holds to the cent is unknown, never rounded
+            # or a crash. build() lists it as a data issue.
+            t["unallocated"] = None
 
     totals, buckets, statuses, customers = {}, {}, {}, {}
     for r in rows:
@@ -307,7 +321,8 @@ def payments_summary(rows):
         "by_status": [{"status": st, "currency": c, **v} for (st, c), v in
                       sorted(statuses.items(), key=lambda kv: (kv[0][0], rank[kv[0][1]]))],
         "by_customer": sorted(({"party_id": p, "currency": c, **v} for (p, c), v in customers.items()),
-                              key=lambda x: (rank[x["currency"]], -x["unallocated"], x.get("customer") or "")),
+                              key=lambda x: (rank[x["currency"]], x["unallocated"] is None,
+                                              -(x["unallocated"] or 0), str(x.get("customer") or ""))),
     }
 
 
@@ -370,6 +385,18 @@ def validated_receipts(receipts, issues, quarantined_customers=None):
     return out
 
 
+def payment_state(outstanding, paid, credits=None):
+    """Instructor answer 11 (10 Nov): money received and a balance left -> "partially paid".
+    No money received but a credit note applied and a balance left -> "partially credited" (B4)."""
+    if outstanding is None or paid is None:
+        return "unknown"
+    if outstanding <= 0:
+        return "paid"
+    if paid > 0:
+        return PARTIALLY_PAID
+    return PARTIALLY_CREDITED if credits is not None and credits > 0 else "unpaid"
+
+
 def invoices_overdue(invoices, report_date, issues=None):
     """Submitted invoices past their due date with a balance left, plus invoices with no due date.
 
@@ -383,10 +410,20 @@ def invoices_overdue(invoices, report_date, issues=None):
     """
     overdue, no_due = [], []
     for inv in invoices:
-        if inv.get("docstatus") != SUBMITTED or inv.get("direction", RECEIVABLE) != RECEIVABLE:
+        if inv.get("docstatus") != SUBMITTED:
+            continue
+        direction = inv.get("direction", RECEIVABLE)
+        if direction != RECEIVABLE:
+            # Bug hunt G2 (20 Nov): supplier bills ("payable") are left out by design; any other value
+            # (empty, "Receivable", a typo) is left out too, but said so, never silently.
+            if direction != "payable":
+                _issue(issues, inv, "direction", "unknown invoice direction; left out (expected receivable or payable)")
             continue
         outstanding = _amount_value(inv, "outstanding", issues)
         paid = _amount_value(inv, "amount_paid", issues)
+        # Optional: older rows have no credits_applied. Missing means no credit is known; an
+        # invalid value is still a data issue.
+        credits = None if inv.get("credits_applied") in (None, "") else _amount_value(inv, "credits_applied", issues)
         due = _date_value(inv, "due_date", issues)
         row = {
             "number": inv.get("number"),
@@ -399,11 +436,9 @@ def invoices_overdue(invoices, report_date, issues=None):
             "payment_terms": inv.get("payment_terms"),
             "grand_total": _amount_value(inv, "grand_total", issues),
             "amount_paid": paid,
+            "credits_applied": credits,
             "outstanding": outstanding,
-            # Instructor answer 11 (10 Nov): money received and a balance left -> report the balance,
-            # age it from the due date, and label it "partially paid".
-            "payment_state": "unknown" if outstanding is None or paid is None else (
-                PARTIALLY_PAID if paid > 0 and outstanding > 0 else ("unpaid" if outstanding > 0 else "paid")),
+            "payment_state": payment_state(outstanding, paid, credits),
             "currency": inv.get("currency_code"),
             "fixture": looks_like_fixture(inv),
         }
@@ -484,11 +519,15 @@ def build(client, report_date=None, days=7, instance=None, currencies=None):
     else:
         history = {"status": "blocked",
                    "reason": "this login has no PaymentReceived read tool, so receipt history is not shown. Tracked as BUG-31-001"}
+    summary = payments_summary(pay_rows)
+    if any(t["unallocated"] is None for t in summary["by_currency"]):
+        payment_issues.append({"id": None, "number": None, "field": "summary",
+                               "reason": "a total is too large to show exactly; shown as unknown"})
     sections["payments_not_applied"] = {
         "status": "ok",
         "rule": "incoming (receive), not cancelled, unallocated > 0",
         "rows": pay_rows,
-        "summary": payments_summary(pay_rows),
+        "summary": summary,
         "receipt_history": history,
         "note": None if payments else "no incoming payments on this instance (expected, instructor 7 Nov)",
         "data_issues": payment_issues,
@@ -540,17 +579,19 @@ def cell(v):
     """
     if v is None:
         return ""
-    text = str(v).replace("\\", "\\\\").replace("|", "\\|")
-    return " ".join(text.replace("\r\n", "\n").replace("\r", "\n").split("\n")).strip()
+    # E2: control and invisible formatting characters from a record never reach the file or console.
+    text = display_text(v).replace("\\", "\\\\").replace("|", "\\|")
+    return " ".join(text.replace("\r\n", "\n").replace("\r", "\n").replace("\x85", "\n").replace("\t", " ").split("\n")).strip()
 
 
 def _invoice_rows(rows):
-    out = ["| Invoice | Customer | Due | Days overdue | Terms | Total | Paid | Outstanding | Payment | |",
-           "|---|---|---|---:|---|---:|---:|---:|---|---|"]
+    out = ["| Invoice | Customer | Due | Days overdue | Terms | Total | Paid | Credited | Outstanding | Payment | |",
+           "|---|---|---|---:|---|---:|---:|---:|---:|---|---|"]
     for r in rows:
         out.append(f"| {cell(r['number'])} | {cell(r['customer'])} | {cell(r['due_date'])} | "
                    f"{r['days_overdue'] if r['days_overdue'] is not None else ''} | {cell(r['payment_terms'])} | "
-                   f"{_money(r['grand_total'])} | {_money(r['amount_paid'])} | {_money(r['outstanding'])} {cell(_cur(r))} | "
+                   f"{_money(r['grand_total'])} | {_money(r['amount_paid'])} | {'' if r.get('credits_applied') is None else _money(r['credits_applied'])} | "
+                   f"{_money(r['outstanding'])} {cell(_cur(r))} | "
                    f"{cell(r.get('payment_state'))} | {'fixture' if r['fixture'] else ''} |")
     return out
 
@@ -559,6 +600,9 @@ def _invoice_tables(rows, no_due):
     partly = sum(1 for r in rows if r.get("payment_state") == PARTIALLY_PAID)
     lines = ([f"{partly} of {len(rows)} are **partially paid** (some money received, a balance left); "
               "they show the balance and are aged from the due date.", ""] if partly else [])
+    credited = sum(1 for r in rows if r.get("payment_state") == PARTIALLY_CREDITED)
+    lines += ([f"{credited} of {len(rows)} are **partially credited** (a credit note applied, no money received, "
+               "a balance left).", ""] if credited else [])
     lines += (_invoice_rows(rows) if rows else ["None."]) + [""]
     lines += [f"### Invoices with no due date ({len(no_due)})", ""]
     lines += (_invoice_rows(no_due) if no_due else ["None."]) + [""]
@@ -607,7 +651,7 @@ def _payment_tables(sec):
                 f"{_money(r['unallocated'])} {cell(_cur(r))} | {cell(r['status'])}"
                 f"{cell(' (' + '; '.join(r['notes']) + ')') if r.get('notes') else ''} |")
         if show_hist:
-            same = f" {cell(', '.join(r['same_amount_receipts']))}" if r.get("same_amount_receipts") else ""
+            same = f" {cell(', '.join(map(str, r['same_amount_receipts'])))}" if r.get("same_amount_receipts") else ""
             paid_label = "verified paid" if hist.get("coverage") == "partial" else "paid"
             line += f" {HINT_LABELS.get(r.get('hint'), '')}{same} ({r.get('receipts_paid', 0)} {paid_label}) |"
         lines.append(line + f" {'fixture' if r['fixture'] else ''} |")

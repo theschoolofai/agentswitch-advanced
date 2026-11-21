@@ -2,7 +2,9 @@
 
     python -m o2c.drafts --instance suryodaya --out reports/            # propose: writes a review file, changes nothing
     python -m o2c.drafts --instance suryodaya --out reports/ --accounts-email <address> --create [--mailbox-id <id>]
-                                                                        # a person approves, then drafts are saved in their mailbox
+                                                                        # a person approves, then the accounts digest is saved in their mailbox
+    python -m o2c.drafts --instance suryodaya --out reports/ --create --only overdue_reminder
+                                                                        # customer reminders are saved only when asked for by name
 
 Two kinds of draft:
 - `accounts_digest`: one internal note to accounts listing orders not invoiced and payments
@@ -16,15 +18,17 @@ folder="drafts" and is_draft=true. It never updates, deletes or sends. Every sen
 EmailCampaign.send) is refused before a request is made.
 """
 import argparse
+from collections import Counter
 import json
+import re
 import os
 from datetime import date
 from pathlib import Path
 
 from . import matching, report
-from .client import Client, McpError, WriteBlocked
-from .values import money, money_sum, money_text
-from .output import instance_label, report_stem, write_pair
+from .client import Client, McpError, WriteBlocked, platform_failure, tool_result
+from .values import display_text, has_unsafe_text, money, money_sum, money_text
+from .output import days_option, instance_label, report_stem, safe_console, write_pair
 
 DRAFT_TOOL = "EmailMessage.create"
 ACCOUNTS_PLACEHOLDER = "(accounts address: a person fills this in)"
@@ -36,7 +40,7 @@ def _money(v, currency=None):
 
 def _plain(v, width=None):
     """Record text for a plain-text table cell: one line, optionally cut to `width` characters."""
-    text = " ".join(str(v if v is not None else "").split())
+    text = " ".join(display_text(v if v is not None else "").split())   # E2: no control characters
     return text if width is None or len(text) <= width else text[:width - 1] + "…"
 
 
@@ -80,8 +84,17 @@ def accounts_digest(rep, matches, accounts_email=None):
     diagnostics = [r for sec in secs.values() for r in sec.get("data_issues", [])]
     if not order_rows and not inv_rows and not pay_rows and not no_due and not diagnostics:
         return None
-    by_payment = {m["payment"]: m for m in matches}
+    # Bug hunt E3 (20 Nov): look a payment's matches up by its id. Keyed by number, two payments with
+    # no number (or the same one) shared one entry, so one customer's payment showed another
+    # customer's invoice as "same amount". A number is used only when it is unique.
+    by_id = {m["payment_id"]: m for m in matches if m.get("payment_id") is not None}
+    numbers = Counter(m.get("payment") for m in matches)
+    by_number = {m["payment"]: m for m in matches if m.get("payment") is not None and numbers[m["payment"]] == 1}
+
+    def match_for(r):
+        return (by_id.get(r.get("id")) if r.get("id") is not None else None) or by_number.get(r.get("number"))
     partly = sum(1 for r in inv_rows if r.get("payment_state") == report.PARTIALLY_PAID)
+    credited = sum(1 for r in inv_rows if r.get("payment_state") == report.PARTIALLY_CREDITED)
     inv_count = str(len(inv_rows)) if invoices["status"] == "ok" else "not available"
     test = lambda r: "test data" if r.get("fixture") else ""
 
@@ -94,7 +107,8 @@ def accounts_digest(rep, matches, accounts_email=None):
         "Summary",
         f"- Orders not invoiced: {len(order_rows)}" + (f", total {_totals(order_rows, 'grand_total')}" if order_rows else ""),
         f"- Invoices overdue: {inv_count}" + (f", {_totals(inv_rows, 'outstanding')} outstanding" if inv_rows else "")
-        + (f" ({partly} partially paid)" if partly else ""),
+        + (f" ({'; '.join(t for t in (f'{partly} partially paid' if partly else '', f'{credited} partially credited' if credited else '') if t)})"
+           if partly or credited else ""),
         f"- Payments not applied: {len(pay_rows)}" + (f", {_totals(pay_rows, 'unallocated')} unallocated" if pay_rows else ""),
         "Amounts in different currencies are shown separately, never added together.",
         "",
@@ -118,7 +132,17 @@ def accounts_digest(rep, matches, accounts_email=None):
             [[r["number"], _plain(r["customer"] or "unknown customer", CUSTOMER_WIDTH), r["due_date"], r["days_overdue"],
               _amount(r["outstanding"], r.get("currency")), r.get("payment_state") or "", test(r)] for r in inv_rows],
             right={3, 4})
-        lines += ["", "A reminder draft is proposed for each customer with an email address; a person reviews and sends it.", ""]
+        held = held_customers(inv_rows, pay_rows)
+        lines += ["", "A reminder draft is proposed for each customer with an email address"
+                  + (", except those held back below" if held else "") + "; a person reviews and sends it.", ""]
+        if held:
+            lines += [f"Reminders held back ({len(held)}): these customers have overdue invoices, but we also hold a "
+                      "payment from them that is not applied yet. Please apply it first, then decide whether a reminder is needed.", ""]
+            for party_id, pays in sorted(held.items(), key=lambda kv: str(kv[1][0].get("customer") or "")):
+                invs = [_ref(r.get("number")) for r in inv_rows if r.get("party_id") == party_id]
+                lines.append(f"- {_plain(pays[0].get('customer') or 'unknown customer', CUSTOMER_WIDTH)}: "
+                             f"payment {', '.join(_payment_text(p) for p in pays)}; overdue {', '.join(invs)}")
+            lines.append("")
     elif invoices["status"] == "ok":
         lines += ["None.", ""]
     else:
@@ -135,11 +159,11 @@ def accounts_digest(rep, matches, accounts_email=None):
     if pay_rows:
         rows = []
         for r in pay_rows:
-            cands = (by_payment.get(r["number"]) or {}).get("candidates") or []
+            cands = (match_for(r) or {}).get("candidates") or []
             match = ", ".join(f"{c['kind']} {c['number']} ({_amount(c['amount'], c.get('currency'))}"
                               f"{', same amount' if c['exact'] else ''})" for c in cands) or "no candidate found"
             if r.get("hint") == "same_amount":   # receipt history (PaymentReceived), when readable
-                match += f"; CHECK: same amount already recorded as applied receipt {', '.join(r['same_amount_receipts'])}"
+                match += f"; CHECK: same amount already recorded as applied receipt {', '.join(map(str, r['same_amount_receipts']))}"
             elif r.get("hint") == "has_history":
                 match += f"; customer has {r['receipts_paid']} applied receipts"
             rows.append([r["number"], _plain(r["customer"] or "unknown customer", CUSTOMER_WIDTH), r["payment_date"] or "?",
@@ -166,6 +190,65 @@ def accounts_digest(rep, matches, accounts_email=None):
 
 
 UNKNOWN_CURRENCY = report.UNKNOWN_CURRENCY
+
+# Live test F1 (20 Nov): the platform refuses a message body over 10,000 characters ("Body Text is too
+# long (max 10000 chars)"); the limit is not in the tool schema. Suryodaya's digest was well over
+# it, so it could never be saved. A longer draft is split into numbered parts.
+BODY_MAX = 10000
+_PART_MARGIN = 200        # room for the "(Part i of n.)" and "(continued)" lines
+_RULE_RE = re.compile(r"-+(?:  +-+)*")
+_HEADING_RE = re.compile(r"\d+\. \S|Invoices in \S+:|Data validation warnings")
+
+
+def _pack(lines, budget):
+    """Line chunks of at most `budget` characters (newlines counted). A cut prefers the last blank
+    line in the second half of a chunk; a cut inside a text table repeats its header lines."""
+    chunks, cur, size, header = [], [], 0, None
+    for i, line in enumerate(lines):
+        if i + 1 < len(lines) and _RULE_RE.fullmatch(lines[i + 1].strip() or "x"):
+            header = None       # a new table starts here; its header is set on the rule line
+        if _RULE_RE.fullmatch(line.strip() or "x") and i > 0:
+            header = [lines[i - 1], line]
+        elif not line.strip():
+            header = None if cur and cur[-1].strip() == "" else header
+        while len(line) > budget:           # one line longer than a part (never seen): hard cut
+            chunks.append(cur + [line[:budget]]) if not cur else chunks.extend([cur, [line[:budget]]])
+            cur, size, line = [], 0, line[budget:]
+        if cur and size + len(line) + 1 > budget:
+            blanks = [j for j, l in enumerate(cur) if not l.strip() and j >= len(cur) // 2]
+            # Best: just before a section heading ("2. Invoices overdue", "Invoices in USD:"), so a
+            # heading never ends a part with its table in the next one.
+            before_heading = [j for j in blanks if j + 1 < len(cur) and _HEADING_RE.match(cur[j + 1])]
+            if not before_heading and _HEADING_RE.match(line) and cur[-1].strip() == "":
+                before_heading = [len(cur) - 1]
+            blanks = before_heading or blanks
+            cut = blanks[-1] + 1 if blanks else len(cur)
+            chunks.append(cur[:cut])
+            cur = cur[cut:]
+            if header and not blanks and line.strip():
+                cur = [header[0] + " (continued)", header[1]] + cur
+            size = sum(len(l) + 1 for l in cur)
+        cur.append(line)
+        size += len(line) + 1
+    if cur:
+        chunks.append(cur)
+    return chunks
+
+
+def fit_body(draft, limit=BODY_MAX):
+    """[draft], or the draft as numbered parts that each fit the platform's body limit (F1).
+    Every part keeps the recipient; the subject says "(part i of n)", so D4 sees each part once."""
+    if len(draft["body_text"]) <= limit:
+        return [draft]
+    chunks = _pack(draft["body_text"].split("\n"), limit - _PART_MARGIN)
+    n = len(chunks)
+    parts = []
+    for i, chunk in enumerate(chunks, 1):
+        while chunk and not chunk[0].strip():
+            chunk = chunk[1:]
+        body = "\n".join([f"(Part {i} of {n}.)", ""] + chunk).rstrip()
+        parts.append({**draft, "subject": f"{draft['subject']} (part {i} of {n})", "body_text": body, "part": [i, n]})
+    return parts
 
 
 def _currency(row):
@@ -207,17 +290,84 @@ def _amount(v, currency):
     return _money(v, currency) if currency else f"{_money(v)} ({UNKNOWN_CURRENCY})"
 
 
+NAME_MAX = 80
+# Text in a record that reads like an instruction to a model, not like a company name.
+_INSTRUCTION_RE = re.compile(r"(?i)\b(?:ignore|disregard|instructions?|prompt|override|assistant)\b|\bsystem\s*:")
+_UNSAFE_NAME_CHARS = set("`<>{}[]\\")
+_EMAIL_RE = re.compile(r"[^@\s<>,;:\"'()\[\]]+@[^@\s<>,;:\"'()\[\]]+\.[A-Za-z]{2,}")
+
+
+def safe_name(raw):
+    """(name, note): the customer name to put in a reminder, or (None, why it was left out).
+
+    Bug hunt C1 (19 Nov), seat 33 case O01: record text reaches a customer-facing draft. A name
+    is copied only if it looks like a name: one line, at most NAME_MAX characters, no markup
+    characters, no URL, no address, and no instruction-like words. Otherwise the reminder says
+    "Dear customer" and the review file says why, so outside text is never quoted.
+    """
+    text = "" if raw is None else str(raw)
+    one_line = _plain(text)
+    if not one_line:
+        return None, None
+    if (one_line != text.strip() or len(one_line) > NAME_MAX or any(c in _UNSAFE_NAME_CHARS for c in one_line)
+            or "://" in one_line or "@" in one_line or any(ord(c) < 32 for c in text if c not in "\n\r\t")
+            or has_unsafe_text(text)   # E2: direction overrides, zero-width marks, C1 controls
+            or _INSTRUCTION_RE.search(one_line)):
+        return None, "customer name not copied into the draft: it has line breaks, markup or instruction-like text"
+    return one_line, None
+
+
+def safe_email(raw):
+    """The one address to draft to, or None: never a list, a display name or anything else."""
+    text = "" if raw is None else str(raw).strip()
+    # E2: an address with invisible or control characters is not a plain address.
+    return text if _EMAIL_RE.fullmatch(text) and not has_unsafe_text(text) else None
+
+
+def _ref(v):
+    """A record number (invoice, payment) as it may appear in a draft: one line, short."""
+    return _plain(v, 40) or "?"
+
+
 def _reminder_line(r, cur):
     """One invoice line in a customer reminder; a partly paid invoice says so (instructor answer 11)."""
-    line = f"- Invoice {r['number']}, due {r['due_date']}, {_amount(r['outstanding'], cur)} outstanding"
+    line = f"- Invoice {_ref(r['number'])}, due {_ref(r['due_date'])}, {_amount(r['outstanding'], cur)} outstanding"
+    credit = r.get("credits_applied")
+    credit_text = f"credit of {_amount(credit, cur)} applied" if credit is not None and credit > 0 else ""
     if r.get("payment_state") == report.PARTIALLY_PAID:
-        line += f" (partially paid: {_amount(r.get('amount_paid'), cur)} received, thank you)"
+        line += f" (partially paid: {_amount(r.get('amount_paid'), cur)} received, thank you"
+        line += f"; {credit_text})" if credit_text else ")"
+    elif r.get("payment_state") == report.PARTIALLY_CREDITED and credit_text:
+        line += f" ({credit_text})"   # bug hunt B4: a credit note is not "unpaid"
     return line
 
 
-def overdue_reminders(invoice_rows, parties_by_id):
-    """One reminder per customer with overdue invoices. Customers with no email are returned
-    as skipped, so a person can follow up another way.
+HELD_REASON = "held: we hold a payment from this customer that is not applied yet; apply it before sending a reminder"
+
+
+def _payment_text(p):
+    return f"{_ref(p.get('number'))} ({_amount(p.get('unallocated'), _currency(p))}, received {p.get('payment_date') or '?'})"
+
+
+def held_customers(invoice_rows, payment_rows):
+    """party_id -> unapplied payment rows, for customers who have overdue invoices AND a payment
+    we have not applied yet (bug hunt B1, 12 Nov).
+
+    Their reminder is held back for a person: asking them to pay, or to "send the payment
+    details", is wrong while we hold their money. A payment with no customer is never matched.
+    """
+    overdue = {r.get("party_id") for r in invoice_rows if r.get("party_id")}
+    held = {}
+    for p in payment_rows or ():
+        if p.get("party_id") in overdue:
+            held.setdefault(p["party_id"], []).append(p)
+    return held
+
+
+def overdue_reminders(invoice_rows, parties_by_id, payment_rows=(), report_date=None):
+    """One reminder per customer with overdue invoices. Customers with no email, or with a
+    payment not applied yet (`payment_rows`, section 3), are returned as skipped, so a person
+    can follow up another way.
 
     A customer with invoices in more than one currency gets one section per currency, each
     with its own subtotal, and no grand total (review of #17: 100 INR + 50 USD is not 150 INR).
@@ -225,17 +375,29 @@ def overdue_reminders(invoice_rows, parties_by_id):
     by_party = {}
     for r in invoice_rows:
         by_party.setdefault(r.get("party_id"), []).append(r)
+    held = held_customers(invoice_rows, payment_rows)
     drafts, skipped = [], []
-    for party_id, rows in sorted(by_party.items(), key=lambda kv: kv[1][0]["customer"] or ""):
+    # str(): a record value of another type must not break the sort (bug hunt D7).
+    for party_id, rows in sorted(by_party.items(), key=lambda kv: str(kv[1][0].get("customer") or "")):
         party = parties_by_id.get(party_id) or {}
-        email = party.get("email")
-        customer = rows[0]["customer"] or party.get("name") or "Customer"
+        raw_email = party.get("email")
+        email = safe_email(raw_email)
+        raw_name = rows[0]["customer"] or party.get("name")
+        name, name_note = safe_name(raw_name)
+        customer = _plain(raw_name, NAME_MAX) or "unknown customer"   # for the review file only
+        if party_id in held:
+            skipped.append({"customer": customer, "invoices": [r["number"] for r in rows], "held": True,
+                            "payments": [p.get("number") for p in held[party_id]],
+                            "reason": HELD_REASON + " (" + "; ".join(_payment_text(p) for p in held[party_id]) + ")"})
+            continue
         if not email:
-            skipped.append({"customer": customer, "invoices": [r["number"] for r in rows], "reason": "no email on the customer record"})
+            reason = ("no email on the customer record" if not raw_email
+                      else "the customer record's email is not a single plain address")
+            skipped.append({"customer": customer, "invoices": [r["number"] for r in rows], "reason": reason})
             continue
         groups = by_currency(rows)
         subtotals = [(cur, total) for cur, _, total in groups]
-        lines = [f"Dear {customer},", "",
+        lines = [f"Dear {name or 'customer'},", "",
                  "Our records show the following invoice(s) past their due date with a balance outstanding:", ""]
         if len(groups) == 1:
             cur, _, total = groups[0]
@@ -256,12 +418,16 @@ def overdue_reminders(invoice_rows, parties_by_id):
         drafts.append({
             "kind": "overdue_reminder",
             "to": email,
-            "subject": f"Payment reminder: {len(rows)} overdue invoice{'s' if len(rows) > 1 else ''}, "
+            # The report date makes each day's reminder its own draft for D4's duplicate check (review of #54):
+            # without it, yesterday's unsent reminder with the same count and amount blocked today's.
+            "subject": f"Payment reminder{' ' + report_date if report_date else ''}: "
+                       f"{len(rows)} overdue invoice{'s' if len(rows) > 1 else ''}, "
                        + " + ".join(_amount(t, c) for c, t in subtotals),
             "body_text": "\n".join(lines),
             "refs": [r["number"] for r in rows],
             "subtotals": [{"currency": c, "outstanding": t} for c, t in subtotals],
             "fixture": any(r["fixture"] for r in rows),
+            "review_notes": [name_note] if name_note else [],
             "status": "proposed",
         })
     return drafts, skipped
@@ -279,9 +445,18 @@ def find_mailbox(client, mailbox_id=None):
     otherwise a person must pick one with --mailbox-id.
     """
     if mailbox_id:
-        return client.call("Mailbox.get", {"id": mailbox_id})
-    boxes = [b for b in client.call("Mailbox.list", {"limit": 20}).get("data", [])
-             if b.get("is_active", True) is not False and not b.get("deleted_at")]
+        box = client.call("Mailbox.get", {"id": mailbox_id})
+        # Bug hunt G1 (20 Nov): a named mailbox must still be usable; drafts in a closed one are lost.
+        if not isinstance(box, dict) or box.get("is_active") is False or box.get("deleted_at"):
+            raise NoMailbox(f"mailbox {mailbox_id} is inactive or deleted; choose another with --mailbox-id")
+        return box
+    page = client.call("Mailbox.list", {"limit": 20})
+    page = page if isinstance(page, dict) else {}
+    listed = [b for b in page.get("data") or [] if isinstance(b, dict)]
+    if isinstance(page.get("total"), int) and page["total"] > len(listed):
+        # G1: more mailboxes than one page; picking from a partial list could pick the wrong one.
+        raise NoMailbox(f"{page['total']} mailboxes, more than one page; choose one with --mailbox-id")
+    boxes = [b for b in listed if b.get("is_active", True) is not False and not b.get("deleted_at")]
     if len(boxes) <= 1:
         return boxes[0] if boxes else None
     default = [b for b in boxes if b.get("is_default")]
@@ -323,10 +498,10 @@ class DraftWriter:
             raise WriteBlocked("refused: the draft has no recipient yet; a person must fill it in")
         if not args.get("from_email") or not args.get("company_id"):
             raise WriteBlocked("refused: the draft needs the mailbox's address and company (from_email, company_id)")
-        result = self.client._rpc("tools/call", {"name": name, "arguments": args})
-        if result.get("isError"):
-            raise McpError(result["content"][0]["text"])
-        return result.get("structuredContent") or json.loads(result["content"][0]["text"])
+        if len(args.get("body_text") or "") > BODY_MAX:   # F1: the platform would refuse it anyway
+            raise WriteBlocked(f"refused: the body is over {BODY_MAX} characters; split it with fit_body()")
+        # Never retried by the client: a retried create could save the same draft twice.
+        return tool_result(self.client._rpc("tools/call", {"name": name, "arguments": args}), name)
 
     def create(self, draft):
         return self.call(DRAFT_TOOL, to_payload(draft, self.mailbox))
@@ -346,11 +521,11 @@ def propose(client, report_date=None, days=7, instance=None, accounts_email=None
     drafts, skipped = [], []
     digest = accounts_digest(rep, matches, accounts_email)
     if digest:
-        drafts.append(digest)
+        drafts += fit_body(digest)
     if inv["status"] == "ok" and inv["rows"]:
-        parties = {p["id"]: p for p in client.list_all("Party")}
-        reminders, skipped = overdue_reminders(inv["rows"], parties)
-        drafts += reminders
+        parties = {p.get("id"): p for p in client.list_all("Party") if p.get("id") is not None}   # D7
+        reminders, skipped = overdue_reminders(inv["rows"], parties, pay_rows, rep["report_date"])
+        drafts += [part for r in reminders for part in fit_body(r)]
     return {
         "instance": instance,
         "report_date": rep["report_date"],
@@ -362,6 +537,17 @@ def propose(client, report_date=None, days=7, instance=None, accounts_email=None
         "drafts": drafts,
         "skipped": skipped,
     }
+
+
+def _fence(body):
+    """A code fence longer than any backtick run in the body, so record text cannot close it (C1)."""
+    longest = max((len(m) for m in re.findall(r"`+", body or "")), default=0)
+    return "`" * max(3, longest + 1)
+
+
+def _md_inline(v):
+    """Record text on one Markdown line: no line breaks, and markup characters shown as text."""
+    return re.sub(r"([\\`*_{}\[\]<>#|])", r"\\\1", _plain(v))
 
 
 def to_markdown(prop):
@@ -391,12 +577,15 @@ def to_markdown(prop):
         lines.append("")
     lines += [f"## Drafts ({len(prop['drafts'])})", ""]
     for i, d in enumerate(prop["drafts"], 1):
+        fence = _fence(d["body_text"])
         lines += [f"### {i}. {d['kind']}{' (test data)' if d['fixture'] else ''}", "",
-                  f"**To:** {d['to']}  ", f"**Subject:** {d['subject']}", "", "```text", d["body_text"], "```", ""]
+                  f"**To:** {_md_inline(d['to'])}  ", f"**Subject:** {_md_inline(d['subject'])}", ""]
+        lines += [f"**Check:** {_md_inline(n)}" for n in d.get("review_notes") or []]
+        lines += [fence + "text", d["body_text"], fence, ""]
     if prop["skipped"]:
         lines += [f"## Not drafted ({len(prop['skipped'])})", ""]
         for k in prop["skipped"]:
-            lines.append(f"- {k['customer']}: {', '.join(k['invoices'])}: {k['reason']}")
+            lines.append(f"- {_md_inline(k['customer'])}: {_md_inline(', '.join(map(str, k['invoices'])))}: {_md_inline(k['reason'])}")
         lines.append("")
     return "\n".join(lines)
 
@@ -405,36 +594,112 @@ DRAFT_KINDS = ("accounts_digest", "overdue_reminder")
 
 
 def drafts_to_save(prop, only=None):
-    """(ready, skipped_count): the proposed drafts --create would save, optionally one kind only.
+    """(ready, skipped): the proposed drafts --create would save, and [(draft, reason)] it won't.
 
-    Drafts without a recipient are never saved. `only="accounts_digest"` saves just the internal
-    note to accounts, so a first test does not put customer reminders into the shared data.
+    Without `only`, only the internal accounts digest is saved. Customer reminders are addressed
+    to the customer's own email, so saving them needs an explicit `only="overdue_reminder"`
+    (bug hunt B2, 12 Nov). Drafts without a recipient, and drafts built on rows that look like
+    other seats' test data, are never saved.
     """
-    chosen = [d for d in prop["drafts"] if only is None or d["kind"] == only]
-    ready = [d for d in chosen if d["to"] != ACCOUNTS_PLACEHOLDER]
-    return ready, len(chosen) - len(ready)
+    kind = only or "accounts_digest"
+    ready, skipped = [], []
+    for d in prop["drafts"]:
+        if d["kind"] != kind:
+            continue
+        if d["to"] == ACCOUNTS_PLACEHOLDER:
+            skipped.append((d, "no recipient yet (set --accounts-email)"))
+        elif d.get("fixture"):
+            skipped.append((d, "built on test data"))
+        else:
+            ready.append(d)
+    return ready, skipped
+
+
+def _draft_key(to, subject):
+    """What makes two drafts the same draft: the recipient (case ignored) and the subject."""
+    return str(to or "").strip().lower(), " ".join(str(subject or "").split())
+
+
+def existing_drafts(client, mailbox):
+    """Keys of the unsent drafts already in this mailbox (bug hunt D4, 19 Nov). Read-only.
+
+    A message that was sent, or deleted, does not count: a new reminder after it is legitimate.
+    """
+    box = (mailbox or {}).get("id")
+    keys = set()
+    for m in client.list_all("EmailMessage", {"mailbox_id": box} if box else None):
+        if m.get("deleted_at") or (box and m.get("mailbox_id") not in (None, box)):
+            continue
+        if m.get("is_draft") is True or m.get("folder") == "drafts":
+            keys.add(_draft_key(m.get("to"), m.get("subject")))
+    return keys
+
+
+_FAMILY_RE = re.compile(r"(Payment reminder|Order-to-cash exceptions)\b")
+SUBJECT_FAMILY = {"accounts_digest": "Order-to-cash exceptions", "overdue_reminder": "Payment reminder"}
+
+
+def older_drafts(current, existing, kind=None):
+    """Unsent drafts of this kind already in the mailbox that are not one of this run's drafts: an earlier day's
+    reminder or digest, a digest whose figures or number of parts changed, or a reminder to a customer who gets
+    none today (paid since, or now held back because we hold their payment, B1). They are not touched; the
+    person is told to check them before sending (review of #54).
+
+    `current` is every draft this run would save, including those already in the mailbox (D4 duplicates).
+    Comparing against all of them, not one at a time, means the parts of one split draft never count as
+    "older" than each other (second review of #54: after a failed save, the rerun named the saved part 1).
+    Any recipient counts, not only this run's: a stale reminder to a customer who has since paid is the one
+    that must not go out."""
+    mine = {_draft_key(d["to"], d["subject"]) for d in current}
+    families = ({SUBJECT_FAMILY[kind]} if kind in SUBJECT_FAMILY
+                else {m.group(1) for _, subject in mine if (m := _FAMILY_RE.match(subject))})
+    return sorted(key for key in existing if key not in mine and any(key[1].startswith(f) for f in families))
+
+
+def without_duplicates(ready, existing):
+    """(new, duplicates): drafts not already in the mailbox, and not repeated within this batch."""
+    seen, new, duplicates = set(existing), [], []
+    for d in ready:
+        key = _draft_key(d["to"], d["subject"])
+        (duplicates if key in seen else new).append(d)
+        seen.add(key)
+    return new, duplicates
+
+
+def recipient_domains(ready):
+    """'example.com (2), x.example (1)': where the drafts would be addressed, for the confirmation."""
+    counts = {}
+    for d in ready:
+        domain = str(d["to"]).rpartition("@")[2].lower() or "?"
+        counts[domain] = counts.get(domain, 0) + 1
+    return ", ".join(f"{k} ({n})" for k, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
 
 
 def main():
     ap = argparse.ArgumentParser(prog="o2c.drafts", description="Propose reminder drafts (never sends)")
-    ap.add_argument("--days", type=int, default=int(os.environ.get("O2C_DAYS", 7)))
+    ap.add_argument("--days", type=days_option, default=os.environ.get("O2C_DAYS", "7"))   # E5
     ap.add_argument("--date", type=date.fromisoformat)
     ap.add_argument("--instance", default=os.environ.get("AGENTSWITCH_INSTANCE"))
     ap.add_argument("--out", type=Path, required=True, help="folder for <instance>-<date>-drafts.md/.json (gitignored)")
     ap.add_argument("--accounts-email", default=os.environ.get("O2C_ACCOUNTS_EMAIL"))
     ap.add_argument("--create", action="store_true", help="after a person confirms, save the drafts in the mailbox (never sends)")
     ap.add_argument("--only", choices=DRAFT_KINDS,
-                    help="with --create, save only this kind of draft (e.g. accounts_digest for a first test)")
+                    help="with --create, the kind of draft to save (default accounts_digest); customer "
+                         "reminders are saved only with --only overdue_reminder")
     ap.add_argument("--mailbox-id", default=os.environ.get("O2C_MAILBOX_ID"),
                     help="only needed if this login has several mailboxes and no default one")
     args = ap.parse_args()
+    safe_console()   # bug hunt G4: before anything can print a failure (D6)
     try:
         instance_label(args.instance)
     except ValueError as e:
         ap.error(str(e))
 
-    client = Client()
-    prop = propose(client, report_date=args.date, days=args.days, instance=args.instance, accounts_email=args.accounts_email)
+    try:
+        client = Client()
+        prop = propose(client, report_date=args.date, days=args.days, instance=args.instance, accounts_email=args.accounts_email)
+    except McpError as e:
+        platform_failure("o2c.drafts", e)
     basename = report_stem(args.instance, prop["report_date"], "-drafts")
     write_pair(args.out, basename, json.dumps(prop, indent=2, allow_nan=False), to_markdown(prop))
     stem = args.out / basename
@@ -447,20 +712,50 @@ def main():
         mailbox = find_mailbox(client, args.mailbox_id)
     except NoMailbox as e:
         raise SystemExit(str(e))
+    except McpError as e:
+        platform_failure("o2c.drafts", e)
     if not mailbox:
         raise SystemExit("this login has no mailbox; nothing created")
     writer = DraftWriter(client, mailbox)
-    ready, skipped = drafts_to_save(prop, args.only)
+    kind = args.only or "accounts_digest"
+    ready, skipped = drafts_to_save(prop, kind)
+    reminders = sum(d["kind"] == "overdue_reminder" for d in prop["drafts"])
+    if kind != "overdue_reminder" and reminders:
+        print(f"{reminders} customer reminder(s) are not saved; review them in {stem}.md and use --only overdue_reminder to save them.")
+    for d, reason in skipped:
+        print(f"not saved ({reason}): {d['subject']}")
     if not ready:
-        raise SystemExit("no draft to save" + (f" of kind {args.only}" if args.only else "") + "; nothing created")
-    print(f"About to save {len(ready)} draft(s){' (' + args.only + ' only)' if args.only else ''} "
-          f"in mailbox {mailbox.get('id')}. They stay unsent."
-          + (f" {skipped} draft(s) have no recipient yet (set --accounts-email) and are not saved." if skipped else ""))
-    if input("Type 'save drafts' to confirm: ").strip() != "save drafts":
+        raise SystemExit(f"no {kind} draft to save; nothing created")
+    # D4: running --create again (a retry after a crash, a second person) must not save the same drafts twice.
+    try:
+        existing = existing_drafts(client, mailbox)
+        current = list(ready)
+        ready, duplicates = without_duplicates(ready, existing)
+    except McpError as e:
+        platform_failure("o2c.drafts", e)
+    for d in duplicates:
+        print(f"not saved (already in the mailbox as an unsent draft): {d['subject']}")
+    for to, subject in older_drafts(current, existing, kind):
+        print(f"check: an older unsent draft to {to.rpartition('@')[2] or '?'} is still in the mailbox "
+              f"({subject!r}); delete it or check it before sending")
+    if not ready:
+        raise SystemExit(f"every {kind} draft is already in the mailbox as an unsent draft; nothing created")
+    print(f"About to save {len(ready)} {kind} draft(s) in mailbox {mailbox.get('id')}, "
+          f"addressed to {recipient_domains(ready)}. They stay unsent.")
+    try:
+        answer = input("Type 'save drafts' to confirm: ")
+    except (EOFError, KeyboardInterrupt):   # E5: no input, or Ctrl-C, is "not confirmed"
+        answer = ""
+    if answer.strip() != "save drafts":
         raise SystemExit("not confirmed; nothing created")
-    for d in ready:
-        created = writer.create(d)
-        print(f"saved draft {created.get('id')}: {d['subject']}")
+    for i, d in enumerate(ready):
+        try:
+            created = writer.create(d)
+        except McpError as e:
+            # The create may have reached the platform before the failure: say so, never retry blindly.
+            platform_failure("o2c.drafts", f"{e}. Saved {i} of {len(ready)} drafts before this. The failed one may "
+                                           "still have been created: check the mailbox before running --create again")
+        print(f"saved draft {created.get('id') if isinstance(created, dict) else '?'}: {d['subject']}")
 
 
 if __name__ == "__main__":

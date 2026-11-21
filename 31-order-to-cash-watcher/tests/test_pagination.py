@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from o2c.client import Client, McpError
+from o2c.client import Client, McpError, UnstablePaginationError
 from o2c import __main__ as cli
 
 
@@ -50,19 +50,22 @@ class Pagination(unittest.TestCase):
         """Keep business filters, but let the client control offsets and limits."""
         c = self.client()
         pages = [{"data": rows("a", "b"), "total": 3}, {"data": rows("c"), "total": 3}]
-        with patch("o2c.client.PAGE_SIZE", 2), patch.object(c, "call", side_effect=pages) as call:
+        # A multi-page read is read twice (D5); the second pass must agree.
+        with patch("o2c.client.PAGE_SIZE", 2), patch.object(c, "call", side_effect=pages * 2) as call:
             self.assertEqual(c.list_all("Invoice", {"docstatus": 1, "offset": 99, "limit": 99}), rows("a", "b", "c"))
+        self.assertEqual([x.args[1]["offset"] for x in call.call_args_list], [0, 2, 0, 2])
         self.assertEqual(call.call_args_list[0].args, ("Invoice.list", {"docstatus": 1, "offset": 0, "limit": 2, "sort_by": "id", "sort_order": "asc"}))
         self.assertEqual(call.call_args_list[1].args, ("Invoice.list", {"docstatus": 1, "offset": 2, "limit": 2, "sort_by": "id", "sort_order": "asc"}))
 
-    def test_default_page_size_does_not_drop_record_501(self):
-        """Cross the real 500-row boundary to prove a second page is included."""
+    def test_default_page_size_does_not_drop_record_1001(self):
+        """Cross the real 1,000-row boundary (the platform's maximum page) to prove a second page is included."""
         c = self.client()
-        pages = [{"data": rows(*range(500)), "total": 501}, {"data": rows(500), "total": 501}]
-        with patch.object(c, "call", side_effect=pages):
+        pages = [{"data": rows(*range(1000)), "total": 1001}, {"data": rows(1000), "total": 1001}]
+        with patch.object(c, "call", side_effect=pages * 2) as call:
             result = c.list_all("SalesOrder")
-        self.assertEqual(len(result), 501)
-        self.assertEqual(result[-1], {"id": 500})
+        self.assertEqual(len(result), 1001)
+        self.assertEqual(result[-1], {"id": 1000})
+        self.assertEqual(call.call_args_list[0].args[1]["limit"], 1000)
 
     def test_invalid_totals_rejected(self):
         """Do not coerce strings, booleans or other malformed counts into totals."""
@@ -85,7 +88,7 @@ class Pagination(unittest.TestCase):
     def test_short_page_does_not_override_an_advertised_total(self):
         """A server-side page cap must not hide rows still promised by the total."""
         pages = [{"data": rows("a"), "total": 3}, {"data": rows("b", "c"), "total": 3}]
-        with patch.object(Client, "call", side_effect=pages):
+        with patch.object(Client, "call", side_effect=pages * 2):
             self.assertEqual(self.client().list_all("Invoice"), rows("a", "b", "c"))
 
     def test_changing_total_rejected(self):
@@ -163,15 +166,17 @@ class ReportCompleteness(unittest.TestCase):
                       [{"data": [self.order("SO-1")], "total": 2}, {"data": [], "total": 2}]):
             with self.subTest(pages=pages), tempfile.TemporaryDirectory() as tmp:
                 target = Path(tmp) / "reports"
-                with self.assertRaises(McpError):
+                # D2: the CLI stops with one line and exit 3 instead of a traceback.
+                with self.assertRaises(SystemExit) as stop:
                     self.run_cli(pages, target)
+                self.assertEqual(stop.exception.code, 3)
                 self.assertFalse(target.exists())
 
     def test_complete_pages_publish_matching_json_and_markdown(self):
         """Both formats must contain both orders, not just a plausible first page."""
         # Two SalesOrder pages are followed by one confirmed-empty Payment page.
-        pages = [{"data": [self.order("SO-1")], "total": 2},
-                 {"data": [self.order("SO-2")], "total": 2}, {"data": [], "total": 0}]
+        so = [{"data": [self.order("SO-1")], "total": 2}, {"data": [self.order("SO-2")], "total": 2}]
+        pages = so * 2 + [{"data": [], "total": 0}]   # two SalesOrder pages, read twice (D5)
         with tempfile.TemporaryDirectory() as tmp:
             output = self.run_cli(pages, Path(tmp))
             result = json.loads((Path(tmp) / "synthetic-2026-11-15.json").read_text(encoding="utf-8"))
@@ -192,10 +197,62 @@ class ReportCompleteness(unittest.TestCase):
             paths = [target / "synthetic-2026-11-15.json", target / "synthetic-2026-11-15.md"]
             for p in paths:
                 p.write_text("previous complete output", encoding="utf-8")
-            with self.assertRaises(McpError):
+            with self.assertRaises(SystemExit) as stop:
                 self.run_cli(pages, target)
+            self.assertEqual(stop.exception.code, 3)
             self.assertEqual([p.read_text(encoding="utf-8") for p in paths], ["previous complete output"] * 2)
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MultiPageReRead(unittest.TestCase):
+    """Bug hunt D5 (19 Nov): a delete + insert between pages must not give a silently wrong list."""
+
+    class Shifting(Client):
+        """A table that another login changes: `changes` maps a call number to the rows from then on."""
+
+        def __init__(self, table, changes):
+            super().__init__(base_url="https://synthetic.invalid", token="synthetic")
+            self.table, self.changes, self.calls = list(table), dict(changes), 0
+
+        def call(self, name, args=None):
+            self.calls += 1
+            if self.calls in self.changes:
+                self.table = self.changes[self.calls]
+            off, lim = args["offset"], args["limit"]
+            return {"data": [dict(r) for r in self.table[off:off + lim]], "total": len(self.table)}
+
+    TABLE = [{"id": f"{i:03d}"} for i in range(10)]
+    CHANGED = [r for r in TABLE if r["id"] != "001"] + [{"id": "999"}]   # one deleted behind, one added ahead
+
+    def test_delete_and_insert_between_pages_is_caught_and_reread(self):
+        # The change lands before the 2nd page of the first pass: that pass alone would miss "004"
+        # and still hold the deleted "001" (the bug-hunt repro). The re-read sees a different list,
+        # the read restarts, and the final answer is the table as it now is.
+        c = self.Shifting(self.TABLE, {2: self.CHANGED})
+        with patch("o2c.client.PAGE_SIZE", 4):
+            got = [r["id"] for r in c.list_all("X")]
+        self.assertEqual(got, [r["id"] for r in self.CHANGED])
+
+    def test_data_that_keeps_changing_stops_with_a_clear_error(self):
+        # Each pass (3 pages of 4) is consistent on its own, but every re-read sees the other version.
+        flip = {4: self.CHANGED, 7: self.TABLE, 10: self.CHANGED, 13: self.TABLE, 16: self.CHANGED}
+        c = self.Shifting(self.TABLE, flip)
+        with patch("o2c.client.PAGE_SIZE", 4), self.assertRaisesRegex(UnstablePaginationError, "records changed during a multi-page read"):
+            c.list_all("X")
+        self.assertEqual(c.calls, 18)   # three attempts, each a read and a re-read, then a clear error
+
+    def test_single_page_reads_are_not_read_twice(self):
+        c = self.Shifting(self.TABLE, {})
+        self.assertEqual(len(c.list_all("X")), 10)
+        self.assertEqual(c.calls, 1)
+
+    def test_rows_without_ids_are_compared_by_content(self):
+        table = [{"n": i} for i in range(6)]
+        edited = [dict(r, n=r["n"] + 100) if r["n"] == 0 else r for r in table]
+        c = self.Shifting(table, {3: edited, 5: edited})   # changes during the re-read, then stays
+        with patch("o2c.client.PAGE_SIZE", 4):
+            got = c.list_all("X")
+        self.assertEqual(got, edited)

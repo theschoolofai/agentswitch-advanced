@@ -49,12 +49,13 @@ class PagingRestarts(unittest.TestCase):
         return Client(base_url="https://synthetic.invalid", token="synthetic")
 
     def test_changed_total_restarts_at_zero_without_leaking_old_rows(self):
-        pages = [{"data": rows("old"), "total": 2}, {"data": rows("shift"), "total": 3},
-                 {"data": rows("a", "b"), "total": 3}, {"data": rows("c"), "total": 3}]
+        stable = [{"data": rows("a", "b"), "total": 3}, {"data": rows("c"), "total": 3}]
+        pages = [{"data": rows("old"), "total": 2}, {"data": rows("shift"), "total": 3}] + stable * 2
         c = self.client()
         with patch.object(c, "call", side_effect=pages) as call:
             self.assertEqual(c.list_all("Invoice"), rows("a", "b", "c"))
-        self.assertEqual([x.args[1]["offset"] for x in call.call_args_list], [0, 1, 0, 2])
+        # restart at 0 after the changed total, then the D5 re-read of the two stable pages
+        self.assertEqual([x.args[1]["offset"] for x in call.call_args_list], [0, 1, 0, 2, 0, 2])
         self.assertTrue(all(x.args[1]["sort_by"] == "id" and x.args[1]["sort_order"] == "asc"
                             for x in call.call_args_list))
 

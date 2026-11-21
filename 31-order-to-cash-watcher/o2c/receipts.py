@@ -122,10 +122,13 @@ def history_by_customer(receipts):
             # Unknown currency is its own bucket, never merged into known money.
             cur = receipt_currency(r)
             previous = h["by_currency"].get(cur, 0)
-            h["by_currency"][cur] = (money_sum([money(previous), money(applied_amount(r))])
-                                      if cur is not None else None)
+            try:
+                h["by_currency"][cur] = (money_sum([money(previous), money(applied_amount(r))])
+                                          if cur is not None and previous is not None else None)
+            except ValueError:   # bug hunt E6: too large to hold to the cent -> unknown
+                h["by_currency"][cur] = None
             h["applied_total"] = (next(iter(h["by_currency"].values()))
-                                  if len(h["by_currency"]) == 1 and cur is not None else None)
+                                  if len(h["by_currency"]) == 1 and None not in h["by_currency"] else None)
             d = str(r.get("date") or "")[:10] or None
             if d and (h["last_date"] is None or d > h["last_date"]):
                 h["last_date"] = d

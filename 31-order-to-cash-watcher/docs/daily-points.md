@@ -155,15 +155,25 @@ Only invoices are blocked (`BUG-31-001`, see `findings/BUG-31-001.md`, raised in
 - Invoice balance: on a few invoices the balance is also reduced by credits applied, so balance = total − paid − credits. The report reads the balance field directly, so its figures are right.
 
 ## Open items
-- [ ] Sunil reviews PR #13; Deepak merges once write access arrives.
-- [ ] Deepak sends GitHub username `deephazar-eva-ai` to the instructor.
-- [ ] Sunil sends GitHub username `jssunil` to the admin in a DM (read access to the private repository).
-- [x] After #13 merges (13 Nov): merged `upstream/main` into `seat31/deepak-drafts` (PR #17), conflicts resolved in favour of the reviewed #17 versions; re-approval requested.
-- [x] Instructor gives `team31a` the invoice and applied-receipt read tools (`BUG-31-001`). Done: fixed 10 Nov, verified 11 Nov, rechecked against live rows 12 Nov.
-- [ ] Instructor answers what N to use (default 7).
-- [ ] Agree the split with Sunil. His proposal: Sunil = orders not invoiced + report; Deepak = overdue invoices + payments. Resolve the section A overlap with PR #13.
-- [ ] Send BUG-31-001 and BUG-31-002 to the course team as text (the format names the course team; the seat group post may not reach them). Text versions are in the gitignored `private/` folder. Then update each report's Status and the bug list in `PLAN.md`.
-- [x] Daily read-only recheck on both systems: tool list for invoice and applied-receipt tools (BUG-31-001), mailbox list (BUG-31-002). Done: both bugs closed 11 Nov.
-- [ ] Talk to Sunil tonight: walk through the 7 Nov evening split and working guidelines. Confirm he takes task 11 and wires `Ctx(agent=...)` for task 10.
-- [ ] Sunday 8 Nov weekly update: finished / next / one blocker.
-- [x] Rerun the report after the release deploys. Done: all runs were after the 6 Nov 3:48 pm IST release.
+Updated 20 Nov 2026.
+
+Done:
+- [x] PRs #13, #17 and #35 reviewed by Sunil and merged.
+- [x] GitHub usernames sent; both of us have repository access.
+- [x] Split agreed with Sunil (see `PLAN.md`, Who does what).
+- [x] Instructor gave `team31a` the invoice and applied-receipt read tools (`BUG-31-001`): fixed 10 Nov, verified 11 Nov, rechecked against live rows 12 Nov.
+- [x] Instructor answered N (10 Nov): a parameter, default 7, with delay buckets 0–7, 8–14, 15–30, 31–60 and over 60 days.
+- [x] Daily read-only rechecks for `BUG-31-001` and `BUG-31-002`: both bugs closed 11 Nov.
+- [x] Report rerun after the 6 Nov release.
+- [x] Bug hunts of 12 and 19 Nov: B1–B6, C1–C2 and D1–D7 all fixed (`PLAN.md`, Bugs in our own code).
+
+Still open:
+- [ ] Rebase `seat31/deepak-v1` (B1–B5, C1–C2, D1–D7 fixes) onto `upstream/main` and open the PR; Sunil reviews.
+- [ ] Suite tasks 1–4 (orders not invoiced) and the runner that writes `results.json` — Sunil.
+- [ ] Suite task 11 (refuse to edit another seat's order) — Sunil, with the agent loop.
+- [x] Suite task 12 (a report run changes no record) — Deepak, 20 Nov: passes live on both systems.
+- [ ] Wire the agent into task 10 through `Ctx(agent=...)`, so it becomes a real pass or fail instead of 0.5.
+- [ ] Send BUG-31-001 and BUG-31-002 to the course team as text (text versions are in the gitignored `private/` folder).
+- [ ] 20 Dec: integration run alongside the other seats on a copy.
+- [ ] Demo recording, at most 5 minutes (definition of done, 31 Dec).
+- [ ] Weekly update in the seat group every Sunday: finished / next / one blocker.

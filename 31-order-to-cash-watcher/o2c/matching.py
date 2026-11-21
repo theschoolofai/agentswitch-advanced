@@ -61,7 +61,8 @@ def candidate_matches(payment_rows, documents, limit=3, tolerance=0.01):
     """For each unapplied payment row (from report.payments_not_applied), list same-customer
     documents. Exact amount matches come first, then the closest amounts.
 
-    "Same amount" also needs the same currency: 50 USD is not the same as 50 INR. Documents in a
+    "Same amount" also needs the same known currency: 50 USD is not the same as 50 INR, and
+    two amounts with no currency recorded are never "the same amount". Documents in a
     different currency from the payment rank after those in the same currency."""
     by_party = {}
     for d in documents:
@@ -72,11 +73,13 @@ def candidate_matches(payment_rows, documents, limit=3, tolerance=0.01):
         docs = by_party.get(p.get("party_id"), [])
 
         def exact(d):
-            return abs(d["amount"] - amount) <= tolerance and d.get("currency") == cur
+            # Bug hunt B3: an unknown currency never equals another unknown currency.
+            return cur is not None and d.get("currency") == cur and abs(d["amount"] - amount) <= tolerance
 
-        ranked = sorted(docs, key=lambda d: (not exact(d), d.get("currency") != cur, abs(d["amount"] - amount), d["number"] or ""))
+        ranked = sorted(docs, key=lambda d: (not exact(d), d.get("currency") != cur, abs(d["amount"] - amount), str(d["number"] or "")))
         out.append({
             "payment": p["number"],
+            "payment_id": p.get("id"),   # bug hunt E3: the key; numbers can be missing or repeated
             "customer": p.get("customer"),
             "unallocated": amount,
             "currency": cur,

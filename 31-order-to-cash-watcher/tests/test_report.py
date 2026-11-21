@@ -90,6 +90,30 @@ class InvoicesOverdue(unittest.TestCase):
                          ("partially paid", 10.0, 14))
         self.assertEqual(rows["unpaid"]["payment_state"], "unpaid")
 
+    def test_credit_note_is_not_unpaid(self):
+        # Bug hunt B4: 1,000 total, 300 credit, nothing received -> "partially credited", not "unpaid".
+        credited = dict(invoice("cred", "2026-11-01", 700.0), grand_total=1000.0, amount_paid=0.0, credits_applied=300.0)
+        both = dict(invoice("both", "2026-11-01", 10.0), grand_total=100.0, amount_paid=60.0, credits_applied=30.0)
+        settled = dict(invoice("settled", "2026-11-01", 0.0), grand_total=100.0, amount_paid=0.0, credits_applied=100.0)
+        issues = []
+        overdue, _ = report.invoices_overdue([credited, both, settled], D, issues)
+        rows = {r["number"]: r for r in overdue}
+        self.assertEqual(set(rows), {"cred", "both"})   # fully credited: nothing outstanding, not overdue
+        self.assertEqual((rows["cred"]["payment_state"], rows["cred"]["credits_applied"]), ("partially credited", 300.0))
+        self.assertEqual(rows["both"]["payment_state"], "partially paid")   # money received wins (answer 11)
+        self.assertEqual(issues, [])
+        md = "\n".join(report._invoice_tables(overdue, []))
+        self.assertIn("1 of 2 are **partially credited**", md)
+        self.assertIn("| 0.00 | 300.00 | 700.00", md)
+
+    def test_missing_credit_is_not_a_data_issue_but_invalid_credit_is(self):
+        plain = dict(invoice("plain", "2026-11-01", 100.0), grand_total=100.0, amount_paid=0.0)
+        bad = dict(invoice("bad", "2026-11-01", 100.0), grand_total=100.0, amount_paid=0.0, credits_applied="lots")
+        issues = []
+        overdue, _ = report.invoices_overdue([plain, bad], D, issues)
+        self.assertEqual([r["payment_state"] for r in overdue], ["unpaid", "unpaid"])
+        self.assertEqual([(i["number"], i["field"]) for i in issues], [("bad", "credits_applied")])
+
     def test_markdown_counts_and_labels_partially_paid(self):
         part = dict(invoice("part", "2026-11-01", 10.0), grand_total=100.0, amount_paid=90.0)
         unpaid = dict(invoice("unpaid", "2026-11-01", 100.0), grand_total=100.0, amount_paid=0.0)
@@ -290,3 +314,17 @@ class CurrencyLookup(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FixtureMarkers(unittest.TestCase):
+    """Bug hunt C2 (19 Nov): whole words only, and seat 33's [RT33] tag counts as test data."""
+
+    def test_whole_words_and_rt33(self):
+        flagged = {name: report.looks_like_fixture({"_party_id_display": name}) for name in (
+            "Greatest Traders", "Attestation Services", "Contest Pvt Ltd", "Acme",
+            "Test Corp", "acme testing ltd", "[RT33] Acme", "RT33-O01-7f2a", "harness co")}
+        self.assertEqual([n for n, f in flagged.items() if f],
+                         ["Test Corp", "acme testing ltd", "[RT33] Acme", "RT33-O01-7f2a", "harness co"])
+
+    def test_notes_are_checked_too(self):
+        self.assertTrue(report.looks_like_fixture({"_party_id_display": "Acme", "notes": "planted by [RT33]"}))
