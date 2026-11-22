@@ -2,7 +2,7 @@
 
 ## Harness tasks (30 Nov suite)
 
-Graded eval tasks authored by Varun live in [`tasks.toml`](tasks.toml) (nine tasks covering legitimate drafts, send/book/delete/task refusals, phishing, prompt injection, and promotions — aligned with the PR #53 agent). The same set is included in [`../../34-eval-harness/suites/seat28/suite.toml`](../../34-eval-harness/suites/seat28/suite.toml) for the course harness.
+Graded eval tasks authored by Varun: **12 tasks** in [`tasks.toml`](tasks.toml) — the full 30 Nov seat suite slice that locks PR #53 behaviours from the team comparison (drafts, send/book/delete, tasks, calendar integrity, phishing, injection, promotions, no-reply, no draft overwrite). Coverage map: [`COMPARISON_COVERAGE.md`](COMPARISON_COVERAGE.md). Mirrored in [`../../34-eval-harness/suites/seat28/suite.toml`](../../34-eval-harness/suites/seat28/suite.toml).
 
 ## First-task briefing script
 
