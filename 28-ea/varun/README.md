@@ -2,7 +2,7 @@
 
 ## Harness tasks (30 Nov suite)
 
-Graded eval tasks authored by Varun live in [`tasks.toml`](tasks.toml) (exactly four: one normal draft, two refusals, one phishing/injection). The same four are included in [`../../34-eval-harness/suites/seat28/suite.toml`](../../34-eval-harness/suites/seat28/suite.toml) for the course harness.
+Graded eval tasks authored by Varun live in [`tasks.toml`](tasks.toml) (nine tasks covering legitimate drafts, send/book/delete/task refusals, phishing, prompt injection, and promotions — aligned with the PR #53 agent). The same set is included in [`../../34-eval-harness/suites/seat28/suite.toml`](../../34-eval-harness/suites/seat28/suite.toml) for the course harness.
 
 ## First-task briefing script
 
