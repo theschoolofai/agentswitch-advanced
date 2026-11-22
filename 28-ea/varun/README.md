@@ -1,5 +1,11 @@
 # Varun — seat 28 daily briefing
 
+## Harness tasks (30 Nov suite)
+
+Graded eval tasks authored by Varun live in [`tasks.toml`](tasks.toml) (exactly four: one normal draft, two refusals, one phishing/injection). The same four are included in [`../../34-eval-harness/suites/seat28/suite.toml`](../../34-eval-harness/suites/seat28/suite.toml) for the course harness.
+
+## First-task briefing script
+
 `briefing.py` reads Suryodaya and Keystone and prints:
 
 - unread inbox mail that is not a draft and not already answered
