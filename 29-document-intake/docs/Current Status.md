@@ -2,16 +2,16 @@
 
 **The single place to see where Seat 29 stands.** Update it after every run: change "Right now" and any tables that moved, and add one line to the run log.
 
-**Last updated:** 18 Nov 2026, 20:00 IST
+**Last updated:** 28 Nov 2026, IST
 
 ## Right now
 
 | | |
 |---|---|
-| **Phase** | Version 1, due 30 Nov 2026. **Seat review date is today, 18 Nov**: Rohan asked for a status post in the seat chat, and said on 16 Nov the seat closes without progress by 18 Nov |
-| **Overall** | PR #11 is merged into `main`. The harness checks are in [PR #50](https://github.com/theschoolofai/agentswitch-advanced/pull/50), which waits for Rohan's review. No live draft decision was posted by 12 Nov, so the 15 Nov fallback applies: reader, scores and proposed drafts, with no draft Bills created on the live systems |
+| **Phase** | Version 1, **due Mon 30 Nov 2026, in 2 days**. No Seat 29 commit since 18 Nov |
+| **Overall** | PR #11 and PR #50 are both merged into `main`, so the client, reader, vendor check, harness-copy write path and harness checks are all there. **The 12-task suite is not built**: Seats 31 and 35 have a suite in `34-eval-harness/suites/`, Seat 29 has none. No live draft decision was posted, so no draft Bills exist on the live systems |
 | **Merged** | [PR #11](https://github.com/theschoolofai/agentswitch-advanced/pull/11), merged 18 Nov: client and read guard, reader, vendor check, and the write path for harness copies. Approved by Rohan on 17 Nov after one sentence was removed from this file |
-| **In review** | [PR #50](https://github.com/theschoolofai/agentswitch-advanced/pull/50), opened by Priye on 18 Nov from our fork branch `seat29/harness-checks`: only `harness/`, 8 files, about 1,175 lines, based on current `main`. Two commits added on 18 Nov: the `extract` error-message logging, and a skip for the harness file test where there is no root harness file, which is the case on `main`. Waits for Rohan |
+| **Merged** | [PR #50](https://github.com/theschoolofai/agentswitch-advanced/pull/50), merged 19 Nov after Rohan's approval: harness checks only, with the `extract` error-message logging and the harness file test skip |
 | **Closed** | [PR #44](https://github.com/theschoolofai/agentswitch-advanced/pull/44), closed by Sudip on 18 Nov in favour of #50 |
 | **Branches** | `main` now holds all of `29-document-intake/`. `seat29/document-reader` and `seat29/platform-client` are both at `4c0db14`, already in `main`. The harness link points at `seat29/harness-setup-check`, now at `e6c192a`: `main` + #50 + the root harness file and `requirements.txt`. Its `harness/` folder is identical to #50's. New work should branch from current `main` |
 | **Accuracy** | **Fair test on samples 15 to 20: 12 of 13 fields at 6/6, `total_stated` at 3/6, flags 5/6.** Rules frozen at commit `b4fe528` |
@@ -19,9 +19,9 @@
 | **Version 2** | Commit `61b1f48` reads that label. All 20: 13 of 13 fields at 20/20, flags 19/20. **Not a fair test**, because the fix came after seeing the result |
 | **Version 3** | Adds date clues: the document, then the vendor's country, then our company, then currency. Not scored against the key. Compared with version 2, only one document changed: sample 20 lost its date flag, and its date stayed the same |
 | **Versions 4 and 5** | Later reader changes, not scored against the key. All 20 sample results for the scored fields match version 3 |
-| **New test set** | Priye confirmed on 17 Nov that an additional test set exists for a new benchmark run. Not run yet. We need its location |
+| **New test set** | Priye's set, reported 18 Nov: 207 PDFs from outside the course samples (4 Indian GST bills, 3 US invoices, 200 synthetic EUR invoices). All 207 read. Right: seller GSTIN 4/4, buyer name 200/204, printed total 93/206. Missed: seller name 0/207, invoice number 2/207, both dates 0/207, tax rate 0/199. Causes found: the first line `INVOICE` is taken as the seller, labels and values on separate lines are not paired, `1'234.56` amounts are misread, and tax rates in a table column are not found. **The reader fits the course samples, not bills in general.** On this machine since 28 Nov, outside git: 207 PDFs under permissive licences (Apache 2.0 and MIT) |
 | **Harness** | Third run, submitted 17 Nov 09:32, commit `ce6f312`: **14 of 26** again (7 of 13 on each system). Setup, image reading, all 309 unit tests and the 14 risky-tool refusals passed on both. On the harness copy all 20 sample records are listed, but every file returns **HTTP 404**, and `extract` fails on all 20. So the copy has the sample records but not their files, and the 6 checks that need the files cannot pass. This waits on Rohan's open question about sample files on the harness copy |
-| **Platform access** | Tokens renewed on 18 Nov for both systems, due again about 25 Nov. Login check passed on both, and the guard still refuses `Bill.submit` without sending it |
+| **Platform access** | **Both API tokens rejected again on 28 Nov** (renewed 18 Nov, 7-day life). No live read can run until they are renewed |
 | **Mailboxes** | Read on 18 Nov: 1 mailbox, 3 threads and 3 messages on each system. No message has an attachment, so there is no bill PDF to test intake with yet |
 | **First task** | Due 15 Nov. Reader and scores done, no live draft Bills, under the accepted fallback. Priye held the hand-in. **The hand-in is not recorded here: confirm it was made** |
 | **Report** | "Seat 29 First Task Accuracy Report" is shared and linked in the 7 Nov message |
@@ -39,7 +39,7 @@ Open work by deadline. Done work is in the run log below. Some items are tracked
 |---|---|---|---|
 | 1 | Post the seat status in the seat chat, as Rohan asked on 18 Nov | Sudip | Nothing |
 | 2 | ~~Close PR #44, which is replaced by #50~~ Done 18 Nov | Sudip | |
-| 3 | Get PR #50 reviewed and merged. Two commits were added after Sudip's approval, so Priye should look at them | Rohan, with Priye | Rohan's review |
+| 3 | ~~Get PR #50 reviewed and merged~~ Merged 19 Nov | Rohan | |
 | 4 | Post in the seat chat the platform finding Rohan asked for on 13 Nov, so the course team can log it | Sudip | Nothing. The details are kept outside this repo |
 | 5 | ~~Renew the API tokens on both systems~~ Done 18 Nov | Sudip | |
 | 6 | Tell Rohan the mailbox read result: 1 mailbox, 3 threads, 3 messages, no attachments on each system (read 18 Nov). Ask for a thread with a bill PDF | Sudip | Nothing. In the status message |
@@ -62,7 +62,7 @@ Open work by deadline. Done work is in the run log below. Some items are tracked
 | When | Item | Owner |
 |---|---|---|
 | Sun 8 Nov, then weekly | Post the Sunday update | Sudip |
-| Every 7 days, next about 25 Nov | Renew the API tokens on both systems. Last renewed 18 Nov | Sudip |
+| Every 7 days | Renew the API tokens on both systems. Overdue since about 25 Nov | Sudip |
 | When announced | Recheck the tool list after Release 16 | Claude |
 | After the next release | Recheck the 4 bugs still marked for that release (BUG-29-006 and 011 are done). To close the list by 31 Dec, each of the 15 needs a final status | Sudip |
 
@@ -247,6 +247,9 @@ Newest first. Keep each entry to one line, with counts only.
 
 | When (IST) | Run | Result |
 |---|---|---|
+| 28 Nov | Baseline: reader from `main` on Priye's 207 PDFs, without the key | 207 read, 0 failed. Type `unknown` on all 207, because none is addressed to Suryodaya or Keystone, so all go to a person. 1 file flagged for active content. Not scored yet: Sudip runs the scorer |
+| 28 Nov | Code revalidated from a clean checkout of `main` (`94585cf`), fresh install of `requirements.txt`, Python 3.14 on Windows. Same on the harness branch `e6c192a` | `main`: 309 of 309 unit tests, 31 harness tests passed and 1 skipped (no root harness file on `main`, as designed). Harness branch: 309 and 32 of 32. Reader on the 20 local samples: files 20/20 and results 20/20 match `harness/expected_samples.py`, 0 errors |
+| 28 Nov | Read-only recheck and repo check | Both tokens rejected, so nothing on the platform could be read. PR #50 merged 19 Nov. `harness/` and `29-document-intake/` on the harness branch match `main` exactly. No Seat 29 suite on `main` yet |
 | 18 Nov, 21:45 | PR #50 branch: the `extract` logging commit added, plus a fix found while testing it. The harness file test failed wherever the root harness file is absent, including on `main`, so it now skips there. Same fix on the harness branch. #44 closed by Sudip. Pushed as `fdc9764` (#50) and `e6c192a` (harness branch) | #50: 31 passed, 1 skipped. Harness branch: 32 of 32. `harness/` identical on both |
 | 18 Nov, 21:15 | Harness branch `seat29/harness-setup-check` brought up to `main` + PR #50, and the `extract` check now keeps the platform's first error message. Pushed as `b4e839c` | 309 unit tests and 32 harness tests passed on Windows. On Linux (WSL, Python 3.12) the 32 harness tests passed. 5 unit tests failed there only because the test setup lent pypdf through `PYTHONPATH`, which the PDF worker drops by design. The intake code is unchanged since `ce6f312`, which passed 309 of 309 in the harness |
 | 18 Nov, 20:30 | Tokens renewed on both systems. Login probe and read-only checks | Login ok on both, `Bill.submit` refused unsent. Mailbox: 1, threads 3, messages 3, attachments 0, on each system. Bills 382 and 104. 3 harness runs on record. No record changed |
