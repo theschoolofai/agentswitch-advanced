@@ -414,5 +414,94 @@ class DuplicateTests(unittest.TestCase):
         self.assertEqual(second["proposed_action"], "draft_bill")
 
 
+def outside(*lines):
+    """A bill in a layout unlike the course samples: no company of ours on it."""
+    return parse_document("\n".join(lines), own_gstins=OWN)
+
+
+class OtherLayoutTests(unittest.TestCase):
+    """Layouts from outside the course samples. Every value here is made up."""
+
+    def test_swiss_apostrophe_amounts(self):
+        self.assertEqual(parse_amount("1'234.56"), Decimal("1234.56"))
+        self.assertEqual(parse_amount("12’000.00"), Decimal("12000.00"))
+
+    def test_name_and_labels_on_shared_lines(self):
+        doc = outside("INVOICE", "Lindenhof Systems GmbH Invoice No: LS-0042", "Hauptweg 1 Date: 4 March 2026",
+                      "10115 Berlin Due: 18 March 2026", "Bill to:", "Fjord Analytics AS",
+                      "Subtotal: 1'000.00 EUR", "VAT (20%): 200.00 EUR", "TOTAL: 1'200.00 EUR")
+        self.assertEqual(doc["seller_name"], "Lindenhof Systems GmbH")
+        self.assertEqual(doc["buyer_name"], "Fjord Analytics AS")
+        self.assertEqual(doc["invoice_number"], "LS-0042")
+        self.assertEqual((doc["invoice_date"], doc["due_date"]), ("2026-03-04", "2026-03-18"))
+        self.assertEqual((doc["subtotal"], doc["tax_total"], doc["total_stated"]), (1000.0, 200.0, 1200.0))
+        self.assertEqual(doc["tax_rate_percent"], 20)
+        self.assertNotIn("total_mismatch", doc["flags"])
+
+    def test_totals_written_as_sentences(self):
+        doc = outside("INVOICE", "Harbour Lane Ltd Invoice No: HL-7", "Bill to:", "Moss & Fern BV",
+                      "The subtotal is 9.500,00 EUR.", "Plus statutory VAT of 1.900,00 EUR.",
+                      "The total amount due is 11.400,00 EUR.")
+        self.assertEqual((doc["subtotal"], doc["tax_total"], doc["total_stated"]), (9500.0, 1900.0, 11400.0))
+        self.assertEqual(doc["currency"], "EUR")
+
+    def test_a_rate_sentence_takes_no_amount_from_the_next_line(self):
+        doc = outside("INVOICE", "Harbour Lane Ltd Invoice No: HL-8", "Bill to:", "Moss & Fern BV",
+                      "Subtotal: 500.00 EUR", "Statutory VAT (20%) applies.", "TOTAL: 500.00 EUR")
+        self.assertIsNone(doc["tax_total"])
+        self.assertEqual(doc["tax_rate_percent"], 20)
+
+    def test_value_on_the_line_after_its_label(self):
+        doc = outside("TAX INVOICE", "ORIGINAL FOR RECIPIENT", "Kaveri Instruments Private Limited",
+                      f"GSTIN: {VENDOR_OTHER_STATE}", "Invoice Number:", "KI/26/0007", "Invoice Date:", "12-Jul-2026",
+                      "BILLED TO (BUYER):", "Godavari Retail LLP", f"GSTIN: {CUSTOMER}")
+        self.assertEqual(doc["seller_name"], "Kaveri Instruments Private Limited")
+        self.assertEqual(doc["invoice_number"], "KI/26/0007")
+        self.assertEqual(doc["invoice_date"], "2026-07-12")
+        self.assertEqual(doc["buyer_name"], "Godavari Retail LLP")
+        self.assertEqual(doc["seller_gstin"], VENDOR_OTHER_STATE)
+        self.assertNotIn("conflicting_values", doc["flags"])
+
+    def test_a_lone_number_heading_is_not_the_number(self):
+        doc = outside("Riverside Tools", "Invoice Number:", "Description")
+        self.assertNotEqual(doc["invoice_number"], ":")
+
+    def test_worded_indian_tax_lines_and_round_off(self):
+        doc = outside("TAX INVOICE", "Kaveri Instruments Private Limited", f"GSTIN: {VENDOR_SAME_STATE}",
+                      "Invoice Number: KI/26/0008", "Bill to:", "Godavari Retail LLP", f"GSTIN: {OWN_BUYER}",
+                      "Total Taxable Value: INR 1,000.00", "Central Tax (CGST 9%): INR 90.00",
+                      "State Tax (SGST 9%): INR 90.00", "Total GST Amount: INR 180.00", "Round Off: INR 0.40",
+                      "GRAND TOTAL (INCL. GST): INR 1,180.40")
+        self.assertEqual(doc["doc_type"], "vendor_bill")
+        self.assertEqual((doc["subtotal"], doc["tax_total"], doc["total_stated"]), (1000.0, 180.0, 1180.4))
+        self.assertEqual((doc["tax_type"], doc["tax_rate_percent"]), ("CGST_SGST", 18))
+        self.assertNotIn("total_mismatch", doc["flags"])
+
+    def test_the_last_amount_on_a_total_line_counts(self):
+        doc = outside("Cloud Vendor Inc.", "TOTAL AMOUNT DUE ON August 3 , 2026 $4.11", "Tax $0.00",
+                      "Total for this invoice $4.11")
+        self.assertEqual(doc["total_stated"], 4.11)
+        self.assertNotIn("conflicting_values", doc["flags"])
+
+    def test_one_tax_at_two_rates_has_no_single_rate(self):
+        doc = outside("INVOICE", "Harbour Lane Ltd Invoice No: HL-9", "Bill to:", "Moss & Fern BV",
+                      "Subtotal: 300.00 EUR", "VAT (20%): 40.00 EUR", "VAT (10%): 10.00 EUR", "TOTAL: 350.00 EUR")
+        self.assertEqual(doc["tax_total"], 50.0)
+        self.assertIsNone(doc["tax_rate_percent"])
+
+    def test_reverse_charge_means_no_tax(self):
+        doc = outside("INVOICE", "Harbour Lane Ltd Invoice No: HL-10", "Bill to:", "Moss & Fern BV",
+                      "VAT reverse charge mechanism applies.", "Subtotal: 300.00 EUR", "TOTAL: 300.00 EUR")
+        self.assertEqual((doc["tax_total"], doc["tax_rate_percent"]), (0.0, 0))
+
+    def test_a_unit_is_not_a_company_and_a_guess_stays_empty(self):
+        doc = outside("Invoice", "INV/2026/01", "Description", "Quantity", "Amount", "Beeswax", "1.00", "kg")
+        self.assertIsNone(doc["seller_name"])
+
+    def test_dates_with_dashes_spaces_and_times(self):
+        self.assertEqual(parse_date("18-Aug-2026 14:32:10"), date(2026, 8, 18))
+        self.assertEqual(parse_date("August 3 , 2026"), date(2026, 8, 3))
+
+
 if __name__ == "__main__":
     unittest.main()
