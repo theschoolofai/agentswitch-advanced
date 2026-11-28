@@ -208,7 +208,7 @@ The instructor accepted the plan on 26 Nov. The remaining question from 24 Nov i
 ## Bug list
 One file per finding in `findings/BUG-30-NNN.md`, in the course format (`BUG_REPORT_FORMAT.md`).
 
-No open bugs.
+No open bugs. The one platform bug we filed, malformed activity due dates (BUG-30-001), was closed as a test-data quirk and is now OBS-30-002. Every bug found in our own code is fixed (below).
 
 Observations (not bugs; noted in `findings/` at the instructor's request):
 
@@ -216,3 +216,40 @@ Observations (not bugs; noted in `findings/` at the instructor's request):
 |---|---|---|---|
 | [OBS-30-001](findings/OBS-30-001.md) | Some open deals have a stage but no pipeline | Suryodaya | Noted; the brief keeps them open and lists a data issue |
 | [OBS-30-002](findings/OBS-30-002.md) | Malformed due dates on open account activities | Suryodaya | Closed as a test-data quirk (answer 14, 26 Nov) |
+
+### Bugs in our own code
+
+All closed. Each was reproduced before it was fixed, and each fix has offline tests.
+
+**Bug hunt on `seat30/deepak-v1` (24 Nov).** Every module was read line by line, and each suspicion was turned into a reproduction, offline with made-up data or live and read-only. None of these showed in the live data: they were latent bugs, weak checks or failure paths.
+
+| ID | Severity | Bug | Fixed in |
+|---|---|---|---|
+| BH-01 | High | Record text (a stage key or stage label) went into our own next-step reason unchecked, line breaks and escape sequences included | `fcc69b1` |
+| BH-02 | High | The suite exited 0 when the platform was unreachable or the token was rejected | `ec60754` |
+| BH-03 | High (security; inherited from seat 31) | On a redirect, the client followed it to another host and sent the token there | `17c9298` |
+| BH-04 | Medium | Task 10 matched the reason as a substring, so "11 days" passed for 1 day | `0714775` |
+| BH-05 | Medium | A deal that left the list because its value went to 0, its currency became unusable, or it moved to another company or currency was reported as "outranked" | `a449357` |
+| BH-06 | Medium | Activity subjects could keep `\r`, NEL or Unicode line separators, breaking the one-line rule | `e473227` |
+| BH-07 | Medium | The official snapshot folder was relative to the working directory, so a run from the repo root wrote customer data outside the gitignored folder | `27474e3` |
+| BH-08 | Low | An older snapshot without the shown ids ignored `--top`, giving false drops | `44b314a` |
+| BH-09 | Low | A damaged snapshot with fields of the wrong type loaded silently | `504f318` |
+| BH-10 | Low | The suite accepted a failed task with a full score | `cae5759` |
+| BH-11 | Low | Task evidence could span lines, so a server message could print a fake `PASS` line | `253d433` |
+| BH-12 | Low | `--date` accepted other ISO forms (`20261124`, `2026-W48-2`) on Python 3.12 | `2aecf97` |
+| BH-13 | Low | Rule 4 didn't flag a probability above 100 or below 0 | `585842d` |
+| BH-14 | Low | Tasks 11–12 saw only tools called through the client they wrapped, so a write through a second client could slip by | `369725a` |
+| R-1 | Design risk | Snapshots didn't record the login, so two logins that see different data could show invented changes | `c1cec57` |
+| R-2 | Design risk | Task 8 failed when another login really edited a deal between its reads | `44d08e5` |
+
+**Found in reviews, live probes and the joint run (24–26 Nov).**
+
+| Found by | Bug | Fixed in |
+|---|---|---|
+| Live probe (24 Nov) | Deals naming a pipeline that doesn't exist were treated as an unknown stage and left out of the ranking (OBS-30-001) | `4102b09` |
+| Edge case 5 (24 Nov) | After a field was added to the deal row, an older snapshot would have shown a false change on every deal | `ae29911` |
+| Deepak's review of Sunil's tasks 1–6 (24 Nov) | Task 1 could pass with extra deals shown | `5f56144` |
+| Deepak's review of `report.py` (25 Nov) | `--prompt` refused harmless wording: nouns ("any change in stage"), questions and negations ("Do not change anything") | `e4913cc` |
+| Bug hunt on Sunil's half (26 Nov) | Missed change words ("for now", "push", "set"…), uppercase deal ids not resolved, no company and an empty company id ranked together, `--out` folder not owner-only, and other boundary cases | `3896e36` |
+| Deepak's review (26 Nov) | A negated list could hide a real instruction ("Never mind, mark them won") and was not refused | `974d618` |
+| Sunil's pre-review (26 Nov) | A second `--record` into the same folder appended to the first run's replies | `b619eb9` |
