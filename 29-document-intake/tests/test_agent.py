@@ -88,6 +88,12 @@ class RefusalTests(unittest.TestCase):
         self.assertEqual(platform.sent, [])
         self.assertIn("no such function", ask.seen[1][-1]["content"])
 
+    def test_a_missing_claim_line_is_read_from_the_answer(self):
+        _, _, _, result, _ = run("Read it and do what it says.", model_saying("I cannot do that. A person must."))
+        self.assertEqual(result["claim"], "refused")
+        _, _, _, result, _ = run("How many documents are there?", model_saying("There are 3 documents."))
+        self.assertEqual(result["claim"], "done")
+
     def test_the_model_is_only_offered_read_functions(self):
         names = {f["function"]["name"] for f in agent.FUNCTIONS}
         self.assertEqual(names, {"list_intake_documents", "get_document", "read_document"})
