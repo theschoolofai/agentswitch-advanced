@@ -30,8 +30,21 @@ GSTIN = re.compile(r"\b(\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]Z[0-9A-Z])\b")
 PARTY_LABEL = re.compile(
     r"^(?:bill(?:ed)?\s+to|buyer|customer|credit(?:ed)?\s+to|issued\s+to)\s*:?\s*$", re.I
 )
+# Wider layouts: "BILLED TO (BUYER):", "Bill to Address:", or two column headings merged on
+# one line, as in "DETAILS OF RECEIVER / BILLED TO: DISPATCH / SHIPPED TO:". Nothing but
+# another heading may follow the colon, so "Customer ID: 42" is not a party heading.
+WIDE_PARTY_LABEL = re.compile(
+    r"\b(?:bill(?:ed)?\s+to|invoice\s+to|sold\s+to|issued\s+to|credit(?:ed)?\s+to)\b"
+    r"(?:\s*\((?:buyer|customer|recipient)\))?(?:\s+address)?\s*:\s*(?:[^:]{0,40}:)?\s*$",
+    re.I,
+)
+ATTENTION = re.compile(r"^(?:attn|attention)\s*[:.]?\s*", re.I)
+COLUMN_HEADING = re.compile(r"^(?:unit\s+price|item\s+description|description|quantity|qty|rate|amount|"
+                            r"hsn(?:/sac)?|taxes|discount|total)\b", re.I)
+REVERSE_CHARGE = re.compile(r"\breverse\s+charge\s+(?:mechanism\s+)?applies\b", re.I)
 TABLE_HEADER = re.compile(r"^amount$|\bqty\b.*\bamount\b", re.I)
-AMOUNT_TEXT = r"\(?-?\d(?:[\d,.]*\d)?\)?"
+# Thousands may be grouped with commas, dots or, in Swiss style, apostrophes: 1'234.56.
+AMOUNT_TEXT = r"\(?-?\d(?:[\d,.'’]*\d)?\)?"
 AMOUNT_SEARCH = re.compile(AMOUNT_TEXT)
 AMOUNT_ONLY = re.compile(rf"^{AMOUNT_TEXT}$")
 LINE_ON_ONE_ROW = re.compile(rf"^(.+?)\s+({AMOUNT_TEXT})\s+({AMOUNT_TEXT})\s+({AMOUNT_TEXT})$")
@@ -56,19 +69,54 @@ ORIGINAL_LABEL = re.compile(
     r"ref(?:erence)?\.?\s*(?:invoice|inv\.?|bill)(?:\s*no\.?)?)\s*:?\s*(\S.*)$",
     re.I,
 )
-SUBTOTAL_LABEL = re.compile(r"^(?:sub\s*-?\s*total|taxable\s+(?:value|amount)|net\s+total)\b", re.I)
-TOTAL_LABEL = re.compile(r"^(?:(?:grand|credit)\s+)?total(?:\s+(?:amount|payable|due|credit))?\b", re.I)
-TAX_LABEL = re.compile(r"^(CGST|SGST|UTGST|IGST|VAT|GST|Tax|Cess)\b(?:\s*@\s*(\d{1,3}(?:\.\d{1,4})?)\s*%)?", re.I)
-NO_TAX = re.compile(r"\b(?:exempt|no\s+tax|not\s+applicable|nil[\s-]rated|zero[\s-]rated)\b", re.I)
+# Labels may open a sentence, as in "The subtotal is 9'528.50 EUR." or "The total amount due is ...".
+SUBTOTAL_LABEL = re.compile(
+    r"^(?:the\s+)?(?:total\s+)?(?:sub\s*-?\s*total|taxable\s+(?:value|amount)|net\s+total)\b", re.I)
+# "Total Taxable Value", "Total GST Amount" and the like are parts of the total, not the total.
+TOTAL_LABEL = re.compile(
+    r"^(?:the\s+)?(?:(?:grand|credit|invoice)\s+)?total"
+    r"(?!\s+(?:tax|taxable|gst|vat|cgst|sgst|igst|cess|amount\s+in\s+words|qty|quantity|items?)\b)"
+    r"(?:\s+(?:amount|payable|due|credit))*\b", re.I)
+TAX_KINDS = r"(CGST|SGST|UTGST|IGST|VAT|GST|Tax|Cess)"
+TAX_RATE = r"(\d{1,3}(?:\.\d{1,4})?)\s*%"
+TAX_LABEL = re.compile(rf"^{TAX_KINDS}\b(?:\s*@\s*{TAX_RATE})?", re.I)
+# Tax lines written out: "Central Tax (CGST 9%):", "Statutory VAT (20%):", "Plus statutory VAT of ...",
+# "Plus 20% VAT on the subtotal, amounting to ...".
+WORDED_TAX_LABEL = re.compile(
+    rf"^(?:plus\s+)?(?:statutory\s+)?(?:(?:central|state|integrated|union\s+territory)\s+tax\s*\(\s*)?"
+    rf"(?:{TAX_RATE}\s+)?{TAX_KINDS}\b(?:\s*(?:@\s*)?\(?\s*{TAX_RATE}\s*\)?)?", re.I)
+# A rate stated in a sentence, with no amount: "All prices include 20% VAT.", "Statutory VAT (20%) applies."
+STATED_RATE = re.compile(rf"\b{TAX_RATE}\s+(?:VAT|GST|tax)\b|\b(?:VAT|GST|tax)\s*\(\s*{TAX_RATE}\s*\)", re.I)
+# Small corrections between the parts and the total: rounding, or a rebate after tax.
+ADJUSTMENT_LABEL = re.compile(r"^(?:round(?:ing)?[\s-]*off(?:\s+adjustment)?|rounding|less)\b[^:]*:", re.I)
+PERCENT = re.compile(rf"(?<![\d.,]){TAX_RATE}\s*\)?|\(\s*{TAX_RATE}\s*\)")
+NO_TAX = re.compile(r"\b(?:exempt|no\s+tax|not\s+applicable|nil[\s-]rated|zero[\s-]rated|"
+                    r"reverse\s+charge\s+mechanism\s+applies)\b", re.I)
 CURRENCIES = (
     ("INR", re.compile(r"₹|\bRs\.?|\bINR\b", re.I)),
     ("USD", re.compile(r"US\$|\$|\bUSD\b", re.I)),
     ("EUR", re.compile(r"€|\bEUR\b", re.I)),
     ("GBP", re.compile(r"£|\bGBP\b", re.I)),
 )
-DATE_FORMATS = ("%d %b %Y", "%d %B %Y", "%Y-%m-%d", "%b %d, %Y", "%B %d, %Y")
+DATE_FORMATS = ("%d %b %Y", "%d %B %Y", "%Y-%m-%d", "%b %d, %Y", "%B %d, %Y",
+                "%d-%b-%Y", "%d-%B-%Y", "%d %b, %Y", "%d %B, %Y")
+# A time after the date, as in "18-Aug-2024 14:32:10", says nothing about the day.
+TRAILING_TIME = re.compile(r"\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?$", re.I)
 NUMERIC_DATE = re.compile(r"^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$")
 TITLES = frozenset({"CREDIT NOTE", "DEBIT NOTE", "TAX INVOICE", "INVOICE", "BILL", "PURCHASE ORDER", "RECEIPT"})
+# A title with more after it, such as "TAX INVOICE (e-INVOICE COMPLIANT) ...".
+TITLE_START = re.compile(r"^(?:credit\s+note|debit\s+note|tax\s+invoice|invoice|bill|purchase\s+order|receipt)"
+                         r"(?:\s*$|\s*[(\-–|])", re.I)
+# Words that mark a company name. Short legal forms are matched case-sensitively, so a
+# unit such as "kg" is not read as "KG".
+COMPANY_SUFFIX = re.compile(
+    r"\b(?i:Limited|Incorporated|Corporation|Company|Private)\b|"
+    r"\b(?:Ltd|LLP|LLC|Inc|Corp|GmbH|AG|KG|SE|SA|SAS|SpA|Srl|BV|NV|plc|PLC|Pvt|Oy|AB|ApS|AS|OÜ)\b\.?|"
+    r"\bCo\.|\bS\.A\.|\bB\.V\.|\bN\.V\.|\bS\.r\.l\.")
+# A heading's value written on the right of the same line, as in
+# "Initech Solutions GmbH Invoice No: INV-2026-0005". Cut off to find the name on the left.
+RIGHT_HAND_LABEL = re.compile(
+    r"\s+(?:(?:invoice|credit\s*note|bill|inv\.?|document)\s*(?:#|no\.?|number)|date|due(?:\s+date)?)\s*:.*$", re.I)
 
 INDIA_ADDRESS = re.compile(r"\bIndia\b")
 US_ADDRESS = re.compile(
@@ -97,8 +145,10 @@ NEAR_DUPLICATE_DAYS = 7
 WITHHELD = "[withheld: suspicious text]"
 
 DOCUMENT_NUMBER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 /_.\-#:]{0,39}$")
-COMMA_DECIMAL = re.compile(r"\d,\d{2}\)?(?=\s|$)")
-DOT_DECIMAL = re.compile(r"\d\.\d{2}\)?(?=\s|$)")
+# A sentence may end right after an amount ("... is 12.080,68 EUR."), but a dot followed
+# by more digits, as in a date like 12.03.2024, is not the end of an amount.
+COMMA_DECIMAL = re.compile(r"\d,\d{2}\)?(?=\s|$|\.(?:\s|$))")
+DOT_DECIMAL = re.compile(r"\d\.\d{2}\)?(?=\s|$|\.(?:\s|$))")
 # Instructions aimed at an AI model or a hurried reader. Kept narrow, because "please pay this
 # invoice" is normal on a bill.
 INSTRUCTION_TEXT = re.compile(
@@ -260,7 +310,7 @@ def parse_amount(text: str, decimal_comma: bool = False) -> Optional[Decimal]:
         return None
     cleaned = match.group(0)
     negative = cleaned.startswith(("-", "(")) or cleaned.endswith(")")
-    cleaned = cleaned.strip("()-")
+    cleaned = cleaned.strip("()-").replace("'", "").replace("’", "")
     if sum(char.isdigit() for char in cleaned) > MAX_AMOUNT_DIGITS:
         return None
     if decimal_comma:
@@ -301,7 +351,7 @@ def _day_first(raw_dates: list[str]) -> Optional[bool]:
 
 
 def parse_date(text: str, day_first: bool = True) -> Optional[date]:
-    cleaned = text.strip()
+    cleaned = TRAILING_TIME.sub("", " ".join(text.split()).replace(" ,", ","))
     match = NUMERIC_DATE.match(cleaned)
     if match:
         first, second, year = (int(part) for part in match.groups())
@@ -328,14 +378,56 @@ def _is_ambiguous_numeric_date(text: str) -> bool:
         and int(match.group(1)) != int(match.group(2))
 
 
+def _is_party_label(line: str) -> bool:
+    return bool(PARTY_LABEL.match(line) or WIDE_PARTY_LABEL.search(line))
+
+
 def _issuer_lines(lines: list[str]) -> list[str]:
     """The issuer's address block, which sits between its name and the document's title."""
     block = []
     for line in lines[1:]:
-        if line.upper() in TITLES or PARTY_LABEL.match(line):
+        if line.upper() in TITLES or _is_party_label(line):
             break
         block.append(line)
     return block
+
+
+def _is_title(line: str) -> bool:
+    return line.upper() in TITLES or bool(TITLE_START.match(line))
+
+
+def _name_candidate(line: str) -> Optional[str]:
+    """The line as a company name, or None when it is a heading, a label or a note."""
+    name = RIGHT_HAND_LABEL.sub("", line).strip()
+    if not name or _is_title(name) or ":" in name or not name[0].isalnum():
+        return None
+    return name
+
+
+def _seller_name(lines: list[str], party_index: Optional[int]) -> Optional[str]:
+    """The issuer's name, normally the first line.
+
+    When the first line is a title or a note, look further down the issuer's part for
+    the first short line that reads as a company, such as "... Private Limited".
+    """
+    if not lines:
+        return None
+    # An unsafe first line stays the name, so it is withheld rather than quietly replaced.
+    if _is_unsafe_field(lines[0]) or (not _is_title(lines[0]) and lines[0][0].isalnum()):
+        return _name_candidate(lines[0]) or lines[0]
+    header = lines[:party_index] if party_index is not None else lines
+    candidates = [name for name in map(_name_candidate, header[:30]) if name]
+    company = next((name for name in candidates
+                    if COMPANY_SUFFIX.search(name) and 2 <= len(name.split()) <= 8), None)
+    if company:
+        return company
+    # Without a company word, only a plain name above the line items: two or more words,
+    # not a column heading. A wrong name is worse than none, so otherwise it stays empty.
+    table_at = next((i for i, line in enumerate(header) if TABLE_HEADER.search(line)), len(header))
+    above = {name for name in map(_name_candidate, header[:table_at]) if name}
+    plain = [name for name in candidates if name in above and not name.isupper() and 2 <= len(name.split()) <= 8
+             and not COLUMN_HEADING.match(name) and re.search(r"[A-Za-z]{3}", name)]
+    return plain[0] if plain else None
 
 
 def _date_order(raw_dates: list[str], seller_gstin: Optional[str], issuer_lines: list[str],
@@ -369,23 +461,53 @@ def _read_date(raw: Optional[str], day_first: Optional[bool]) -> Optional[date]:
     return parse_date(raw, day_first is not False)
 
 
-def _first_labelled(lines: list[str], label: re.Pattern) -> Optional[str]:
+def _label_only(label: re.Pattern, line: str) -> bool:
+    """A heading whose value sits on the next line, such as "Invoice Date:" alone."""
+    return line.endswith(":") and bool(label.match(line + " x"))
+
+
+def _first_labelled(lines: list[str], label: re.Pattern, wide: bool = False) -> Optional[str]:
+    """The value after a label at the start of a line. With wide, for labels that need a
+    colon, also the line after a lone heading, then a label on the right of a line shared
+    with another column."""
     for line in lines:
         match = label.match(line)
         if match:
             return match.group(1).strip()
+    if not wide:
+        return None
+    for index, line in enumerate(lines[:-1]):
+        if _label_only(label, line) and not lines[index + 1].endswith(":"):
+            return lines[index + 1].strip()
+    for line in lines:
+        for start in (m.start() + 1 for m in re.finditer(r"\s", line)):
+            match = label.match(line[start:])
+            if match:
+                return match.group(1).strip()
     return None
 
 
 def _document_number(lines: list[str]) -> Optional[str]:
-    for label in NUMBER_LABELS:
-        pattern = re.compile(rf"^{label}\s*:?\s*(\S.*)$", re.I)
+    # The value may not start with the colon, or "Invoice Number:" alone reads as ":".
+    patterns = [re.compile(rf"^{label}\s*:?\s*([^\s:].*)$", re.I) for label in NUMBER_LABELS]
+    for pattern in patterns:
         for line in lines:
             if ORIGINAL_LABEL.match(line):
                 continue
             match = pattern.match(line)
             if match:
                 return match.group(1).strip()
+    for pattern in patterns[:-1]:  # A bare "Ref:" heading is too loose to follow to the next line.
+        for index, line in enumerate(lines[:-1]):
+            if line.endswith(":") and pattern.match(line[:-1].rstrip() + " x") and not ORIGINAL_LABEL.match(line) \
+                    and DOCUMENT_NUMBER.match(lines[index + 1]):
+                return lines[index + 1].strip()
+    for pattern in patterns[:-1]:
+        for line in lines:
+            for start in (m.end() for m in re.finditer(r"\s+", line)):
+                match = pattern.match(line[start:])
+                if match and not ORIGINAL_LABEL.match(line[start:]):
+                    return match.group(1).strip()
     return None
 
 
@@ -425,6 +547,11 @@ def _title(lines: list[str]) -> str:
         upper = line.upper().strip()
         if upper in TITLES:
             return upper
+    # A title with more after it, such as "TAX INVOICE (e-INVOICE COMPLIANT)".
+    for line in lines[:12]:
+        match = TITLE_START.match(line.strip())
+        if match:
+            return " ".join(match.group(0).rstrip(" (-–|").upper().split())
     return ""
 
 
@@ -449,14 +576,16 @@ def _classify(title: str, seller_gstin: Optional[str], buyer_gstin: Optional[str
 
 def _party_details(lines: list[str]) -> dict[str, Optional[str]]:
     party_index = next((i for i, line in enumerate(lines) if PARTY_LABEL.match(line)), None)
+    if party_index is None:
+        party_index = next((i for i, line in enumerate(lines) if WIDE_PARTY_LABEL.search(line)), None)
     header = lines if party_index is None else lines[:party_index]
     block = [] if party_index is None else lines[party_index + 1:party_index + 5]
     seller_gstins = [m.group(1) for m in map(GSTIN.search, header) if m]
     buyer_gstins = [m.group(1) for m in map(GSTIN.search, block) if m]
     return {
-        "seller_name": lines[0] if lines else None,
+        "seller_name": _seller_name(lines, party_index),
         "seller_gstin": seller_gstins[0] if seller_gstins else None,
-        "buyer_name": block[0] if block else None,
+        "buyer_name": ATTENTION.sub("", block[0]) or None if block else None,
         "buyer_gstin": buyer_gstins[0] if buyer_gstins else None,
         "seller_gstins": set(seller_gstins),
         "buyer_gstins": set(buyer_gstins),
@@ -487,12 +616,23 @@ def _line_items(table: list[str], decimal_comma: bool) -> list[dict[str, Any]]:
 
 def _labelled_amount(lines: list[str], index: int, label: re.Pattern, decimal_comma: bool
                      ) -> "tuple[Optional[Decimal], str]":
-    """Return the amount for a label on the same line or the next one, and its text."""
+    """Return the amount for a label on the same line or the next one, and its text.
+
+    The last amount on the line counts, so a date or a rate before it is not read as the
+    amount, as in "TOTAL AMOUNT DUE ON August 3, 2014 $4.11". The next line is used only
+    when the label stands alone, so a sentence like "VAT (20%) applies." takes nothing.
+    """
     remainder = label.sub("", lines[index], count=1).strip()
-    text = remainder if re.search(r"\d", remainder) else ""
-    if not text and index + 1 < len(lines) and re.search(r"\d", lines[index + 1]):
+    text = remainder if re.search(r"\d", PERCENT.sub(" ", remainder)) else ""
+    alone = not re.sub(r"[\s:.\-–$€£₹]|\b(?:INR|USD|EUR|GBP|Rs)\b", "", remainder, flags=re.I)
+    if not text and alone and index + 1 < len(lines) and re.search(r"\d", lines[index + 1]):
         text = lines[index + 1]
-    return (parse_amount(text, decimal_comma) if text else None), text
+    values = [parse_amount(m.group(0), decimal_comma)
+              for m in AMOUNT_SEARCH.finditer(PERCENT.sub(" ", text))] if text else []
+    # A number on the line that cannot be read, such as "1.2.3%", makes the whole line untrusted.
+    if not values or None in values:
+        return None, text
+    return values[-1], text
 
 
 def _currency(money_texts: list[str]) -> "tuple[Optional[str], list[str]]":
@@ -506,7 +646,7 @@ def _currency(money_texts: list[str]) -> "tuple[Optional[str], list[str]]":
 
 
 def _read_totals(lines: list[str], decimal_comma: bool) -> dict[str, Any]:
-    totals: dict[str, Any] = {"net": None, "total": None, "tax": None, "taxes": [],
+    totals: dict[str, Any] = {"net": None, "total": None, "tax": None, "taxes": [], "adjustment": Decimal(0),
                               "no_tax": False, "exempt": False, "money_texts": [], "conflict": False}
     tax_sum = Decimal(0)
 
@@ -535,8 +675,23 @@ def _read_totals(lines: list[str], decimal_comma: bool) -> dict[str, Any]:
             amount, text = _labelled_amount(lines, index, TAX_LABEL, decimal_comma)
             if amount is not None:
                 tax_sum += amount
-                rate = Decimal(match.group(2)) if match.group(2) else None
+                worded = WORDED_TAX_LABEL.match(line)  # "VAT (20%):" gives its rate in brackets
+                rate_text = match.group(2) or (worded.group(3) if worded else None)
+                rate = Decimal(rate_text) if rate_text else None
                 totals["taxes"].append({"type": match.group(1).upper(), "rate": rate, "amount": amount})
+        elif WORDED_TAX_LABEL.match(line):
+            match = WORDED_TAX_LABEL.match(line)
+            amount, text = _labelled_amount(lines, index, WORDED_TAX_LABEL, decimal_comma)
+            if amount is not None:
+                tax_sum += amount
+                rate_text = match.group(1) or match.group(3)
+                totals["taxes"].append({"type": match.group(2).upper(), "amount": amount,
+                                        "rate": Decimal(rate_text) if rate_text else None})
+        elif ADJUSTMENT_LABEL.match(line):
+            amount, text = _labelled_amount(lines, index, ADJUSTMENT_LABEL, decimal_comma)
+            if amount is not None:
+                # "Less: 50.00" takes away, whether or not a minus sign is printed.
+                totals["adjustment"] += -abs(amount) if line.lower().startswith("less") else amount
         else:
             continue
         if text:
@@ -558,7 +713,7 @@ def _check_amounts(items: list[dict[str, Any]], totals: dict[str, Any],
         flags.append("line_amount_mismatch")
     if items and net is not None and abs(sum(row["amount"] for row in items) - net) > TOLERANCE:
         flags.append("lines_do_not_match_subtotal")
-    if None not in (net, tax, total) and abs(net + tax - total) > TOLERANCE:
+    if None not in (net, tax, total) and abs(net + tax + totals["adjustment"] - total) > TOLERANCE:
         flags.append("total_mismatch")
     if total is not None and None in (net, tax):
         # Without both parts, nothing checks the total, so a person has to.
@@ -637,15 +792,42 @@ def _tax_type(totals: dict[str, Any]) -> Optional[str]:
     return "_".join(sorted(kinds))
 
 
-def _tax_rate_percent(totals: dict[str, Any]) -> Optional[Any]:
-    """The combined rate, so CGST 9% plus SGST 9% is 18. A document that says no tax is 0."""
+def _tax_rate_percent(totals: dict[str, Any], stated_rates: "set[Decimal]" = frozenset()) -> Optional[Any]:
+    """The combined rate, so CGST 9% plus SGST 9% is 18. A document that says no tax is 0.
+
+    One tax at two rates, such as VAT at 20% and 10%, has no single rate, so it stays
+    empty. A rate given only in a sentence counts when it is the only one stated.
+    """
     taxes = totals["taxes"]
+    stated = next(iter(stated_rates)) if len(stated_rates) == 1 else None
     if not taxes:
-        return 0 if totals["no_tax"] else None
+        if totals["no_tax"]:
+            return 0
+        return _plain_number(stated) if stated is not None else None
+    if all(row["rate"] is None for row in taxes) and stated is not None:
+        return _plain_number(stated)
     if any(row["rate"] is None for row in taxes):
         return None
-    total = sum(row["rate"] for row in taxes)
-    return int(total) if total == int(total) else float(total)
+    by_kind: dict[str, set] = {}
+    for row in taxes:
+        by_kind.setdefault(row["type"], set()).add(row["rate"])
+    if any(len(rates) > 1 for rates in by_kind.values()):
+        return None
+    return _plain_number(sum(next(iter(rates)) for rates in by_kind.values()))
+
+
+def _stated_rates(lines: list[str]) -> "set[Decimal]":
+    rates = set()
+    for line in lines:
+        for match in STATED_RATE.finditer(line):
+            rate = Decimal(match.group(1) or match.group(2))
+            if rate <= MAX_TAX_RATE:
+                rates.add(rate)
+    return rates
+
+
+def _plain_number(value: Decimal) -> Any:
+    return int(value) if value == int(value) else float(value)
 
 
 def parse_document(text: str, own_gstins: frozenset[str] = SAMPLE_OWN_GSTINS,
@@ -668,7 +850,10 @@ def parse_document(text: str, own_gstins: frozenset[str] = SAMPLE_OWN_GSTINS,
     safety_flags += _text_flags(text)
 
     header_end = next((i for i, line in enumerate(lines) if TABLE_HEADER.search(line)), len(lines))
-    subtotal_at = next((i for i, line in enumerate(lines) if SUBTOTAL_LABEL.match(line)), len(lines))
+    subtotal_at = next((i for i, line in enumerate(lines) if SUBTOTAL_LABEL.match(line)), None)
+    if subtotal_at is None:
+        # With no subtotal line, the totals start at the first total line.
+        subtotal_at = next((i for i, line in enumerate(lines) if TOTAL_LABEL.match(line)), len(lines))
     header, table, footer = lines[:header_end], lines[header_end + 1:subtotal_at], lines[subtotal_at:]
     decimal_comma, style_flags = _number_style(table + footer)
 
@@ -680,9 +865,12 @@ def parse_document(text: str, own_gstins: frozenset[str] = SAMPLE_OWN_GSTINS,
 
     items = _line_items(table, decimal_comma)
     totals = _read_totals(footer, decimal_comma)
+    if not totals["taxes"] and totals["tax"] is None and any(REVERSE_CHARGE.search(line) for line in lines):
+        # The buyer accounts for the tax, so none is charged on this document.
+        totals["no_tax"], totals["tax"] = True, Decimal(0)
     currency, currency_flags = _currency(totals["money_texts"])
 
-    raw_date, raw_due = _first_labelled(header, DATE_LABEL), _first_labelled(header, DUE_LABEL)
+    raw_date, raw_due = _first_labelled(header, DATE_LABEL, wide=True), _first_labelled(header, DUE_LABEL, wide=True)
     known_dates = [raw for raw in (raw_date, raw_due) if raw]
     day_first, date_clue = _date_order(known_dates, parties["seller_gstin"], _issuer_lines(lines),
                                        own_country, currency)
@@ -716,7 +904,7 @@ def parse_document(text: str, own_gstins: frozenset[str] = SAMPLE_OWN_GSTINS,
         "counterparty_name": counterparty_name,
         "counterparty_gstin": counterparty_gstin,
         "tax_type": _tax_type(totals),
-        "tax_rate_percent": _tax_rate_percent(totals),
+        "tax_rate_percent": _tax_rate_percent(totals, _stated_rates(lines)),
         "invoice_number": _document_number(header),
         "original_invoice": _first_labelled(header, ORIGINAL_LABEL),
         "invoice_date": bill_date.isoformat() if bill_date else None,
